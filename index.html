@@ -7,1472 +7,653 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --bg: #ffffff;
-            --fg: #1a1a2e;
-            --muted: #8e8ea0;
-            --accent: #10a37f;
-            --accent-hover: #0d8c6d;
-            --border: #e5e5e5;
-            --card: #f7f7f8;
-            --user-bubble: #f7f7f8;
-            --ai-bubble: #ffffff;
-            --shadow: 0 2px 12px rgba(0,0,0,0.06);
-            --radius: 20px;
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --bg:#fff;--fg:#1a1a2e;--muted:#8e8ea0;--accent:#10a37f;
+            --accent-h:#0d8c6d;--border:#e5e5e5;--card:#f7f7f8;--radius:22px;
         }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg);
-            color: var(--fg);
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--fg);height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
         /* Header */
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg);
-            position: relative;
-            z-index: 10;
-        }
+        header{display:flex;align-items:center;justify-content:center;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg);z-index:10;flex-shrink:0}
+        .logo{display:flex;align-items:center;gap:10px}
+        .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#34d399);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;box-shadow:0 2px 10px rgba(16,163,127,.3)}
+        .logo-text{font-size:18px;font-weight:700;letter-spacing:-.5px}
+        .logo-text span{color:var(--accent)}
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        /* Chat */
+        .chat-container{flex:1;overflow-y:auto;scroll-behavior:smooth}
+        .chat-container::-webkit-scrollbar{width:5px}
+        .chat-container::-webkit-scrollbar-track{background:transparent}
+        .chat-container::-webkit-scrollbar-thumb{background:#d1d1d1;border-radius:10px}
+        .chat-inner{max-width:768px;margin:0 auto;padding:16px 20px 10px}
 
-        .logo-icon {
-            width: 34px;
-            height: 34px;
-            background: linear-gradient(135deg, var(--accent), #34d399);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-weight: 800;
-            font-size: 16px;
-            box-shadow: 0 2px 10px rgba(16,163,127,0.3);
-        }
-
-        .logo-text {
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: var(--fg);
-        }
-
-        .logo-text span {
-            color: var(--accent);
-        }
-
-        /* Chat area */
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            scroll-behavior: smooth;
-        }
-
-        .chat-container::-webkit-scrollbar { width: 6px; }
-        .chat-container::-webkit-scrollbar-track { background: transparent; }
-        .chat-container::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 10px; }
-        .chat-container::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
-
-        .chat-inner {
-            max-width: 768px;
-            margin: 0 auto;
-            padding: 20px 20px 10px;
-        }
-
-        /* Welcome screen */
-        .welcome {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-            text-align: center;
-            padding: 40px 20px;
-            animation: fadeUp 0.6s ease;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .welcome-icon {
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, var(--accent), #34d399);
-            border-radius: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 32px;
-            font-weight: 800;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 30px rgba(16,163,127,0.25);
-        }
-
-        .welcome h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-
-        .welcome p {
-            color: var(--muted);
-            font-size: 15px;
-            max-width: 420px;
-            line-height: 1.6;
-        }
-
-        .suggestions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 32px;
-            width: 100%;
-            max-width: 520px;
-        }
-
-        .suggestion-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 13.5px;
-            color: var(--fg);
-            line-height: 1.5;
-        }
-
-        .suggestion-card:hover {
-            background: #efefef;
-            border-color: #d0d0d0;
-            transform: translateY(-1px);
-        }
-
-        .suggestion-card .sc-icon {
-            font-size: 18px;
-            margin-bottom: 8px;
-            display: block;
-        }
+        /* Welcome */
+        .welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:58vh;text-align:center;padding:40px 20px;animation:fadeUp .5s ease}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .welcome-icon{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),#34d399);border-radius:20px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:800;margin-bottom:20px;box-shadow:0 8px 28px rgba(16,163,127,.22)}
+        .welcome h1{font-size:26px;font-weight:700;margin-bottom:6px;letter-spacing:-.4px}
+        .welcome p{color:var(--muted);font-size:14.5px;max-width:400px;line-height:1.6}
+        .suggestions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:28px;width:100%;max-width:520px}
+        .sug-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;transition:all .18s;font-size:13px;color:var(--fg);line-height:1.5}
+        .sug-card:hover{background:#efefef;border-color:#ccc;transform:translateY(-1px)}
+        .sug-card i{font-size:16px;margin-bottom:6px;display:block;color:var(--accent)}
 
         /* Messages */
-        .message {
-            display: flex;
-            gap: 14px;
-            padding: 20px 0;
-            animation: msgIn 0.35s ease;
-        }
+        .message{display:flex;gap:14px;padding:18px 0;animation:msgIn .3s ease}
+        @keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .message+.message{border-top:1px solid var(--border)}
+        .msg-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;margin-top:2px}
+        .msg-av.u{background:#e8e8ed;color:#555}
+        .msg-av.a{background:linear-gradient(135deg,var(--accent),#34d399);color:#fff;font-size:10px;font-weight:800}
+        .msg-body{flex:1;min-width:0}
+        .msg-name{font-weight:600;font-size:13.5px;margin-bottom:5px}
+        .msg-content{font-size:14.5px;line-height:1.75;color:#333;word-break:break-word}
+        .msg-content p{margin-bottom:8px}.msg-content p:last-child{margin-bottom:0}
+        .msg-content strong{font-weight:600;color:var(--fg)}
+        .msg-content em{font-style:italic}
+        .msg-content code{background:#f1f1f3;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'SF Mono','Fira Code',monospace;color:#c7254e}
+        .msg-content pre{background:#1a1a2e;color:#e0e0e0;padding:14px 16px;border-radius:12px;overflow-x:auto;margin:8px 0;font-size:12.5px;line-height:1.65;font-family:'SF Mono','Fira Code',monospace}
+        .msg-content pre code{background:none;padding:0;color:inherit;font-size:inherit}
+        .msg-content ul,.msg-content ol{padding-left:20px;margin:6px 0}
+        .msg-content li{margin-bottom:4px;line-height:1.65}
+        .msg-content h1,.msg-content h2,.msg-content h3{font-weight:700;margin:12px 0 4px;color:var(--fg)}
+        .msg-content h1{font-size:20px}.msg-content h2{font-size:17px}.msg-content h3{font-size:15px}
+        .msg-img{max-width:320px;max-height:240px;border-radius:10px;margin-bottom:8px;object-fit:cover;border:1px solid var(--border)}
 
-        @keyframes msgIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        /* Typing */
+        .typing-dots{display:inline-flex;gap:4px;align-items:center;padding:4px 0}
+        .typing-dots span{width:6px;height:6px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite}
+        .typing-dots span:nth-child(2){animation-delay:.15s}
+        .typing-dots span:nth-child(3){animation-delay:.3s}
+        @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-5px);opacity:1}}
 
-        .message + .message {
-            border-top: 1px solid var(--border);
-        }
-
-        .msg-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 13px;
-            margin-top: 2px;
-        }
-
-        .msg-avatar.user-av {
-            background: #e8e8ed;
-            color: #555;
-        }
-
-        .msg-avatar.ai-av {
-            background: linear-gradient(135deg, var(--accent), #34d399);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 800;
-        }
-
-        .msg-body {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .msg-name {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 6px;
-        }
-
-        .msg-content {
-            font-size: 15px;
-            line-height: 1.75;
-            color: #333;
-            word-break: break-word;
-        }
-
-        .msg-content p { margin-bottom: 10px; }
-        .msg-content p:last-child { margin-bottom: 0; }
-
-        .msg-content strong { font-weight: 600; color: var(--fg); }
-
-        .msg-content code {
-            background: #f1f1f3;
-            padding: 2px 7px;
-            border-radius: 5px;
-            font-size: 13.5px;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            color: #c7254e;
-        }
-
-        .msg-content pre {
-            background: #1a1a2e;
-            color: #e0e0e0;
-            padding: 16px;
-            border-radius: 12px;
-            overflow-x: auto;
-            margin: 10px 0;
-            font-size: 13px;
-            line-height: 1.6;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-        }
-
-        .msg-content ul, .msg-content ol {
-            padding-left: 22px;
-            margin: 8px 0;
-        }
-
-        .msg-content li {
-            margin-bottom: 5px;
-            line-height: 1.65;
-        }
-
-        .msg-content h3 {
-            font-size: 16px;
-            font-weight: 700;
-            margin: 14px 0 6px;
-            color: var(--fg);
-        }
-
-        .msg-image {
-            max-width: 360px;
-            max-height: 280px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            object-fit: cover;
-            border: 1px solid var(--border);
-        }
-
-        /* Typing indicator */
-        .typing-dots {
-            display: inline-flex;
-            gap: 5px;
-            align-items: center;
-            padding: 4px 0;
-        }
-
-        .typing-dots span {
-            width: 7px;
-            height: 7px;
-            background: var(--muted);
-            border-radius: 50%;
-            animation: dotBounce 1.2s infinite;
-        }
-
-        .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
-
-        @keyframes dotBounce {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-6px); opacity: 1; }
-        }
-
-        /* Input area */
-        .input-area {
-            padding: 0 20px 20px;
-            background: var(--bg);
-        }
-
-        .input-wrapper {
-            max-width: 768px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .input-box {
-            display: flex;
-            align-items: flex-end;
-            background: var(--card);
-            border: 1.5px solid var(--border);
-            border-radius: 26px;
-            padding: 8px 8px 8px 18px;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-
-        .input-box:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(16,163,127,0.1), 0 2px 8px rgba(0,0,0,0.04);
-        }
-
-        /* Preview gambar di input */
-        .input-preview {
-            display: none;
-            padding: 8px 0 6px;
-        }
-
-        .input-preview.active { display: block; }
-
-        .preview-item {
-            position: relative;
-            display: inline-block;
-            margin-right: 8px;
-        }
-
-        .preview-item img {
-            width: 64px;
-            height: 64px;
-            object-fit: cover;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-        }
-
-        .preview-remove {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            width: 22px;
-            height: 22px;
-            background: #333;
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            font-size: 11px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.15s;
-        }
-
-        .preview-remove:hover { background: #e53935; }
-
-        #chatInput {
-            flex: 1;
-            border: none;
-            outline: none;
-            background: transparent;
-            font-family: inherit;
-            font-size: 15px;
-            resize: none;
-            max-height: 160px;
-            min-height: 24px;
-            line-height: 1.5;
-            padding: 6px 0;
-            color: var(--fg);
-        }
-
-        #chatInput::placeholder { color: var(--muted); }
-
-        .input-actions {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        .btn-icon {
-            width: 38px;
-            height: 38px;
-            border: none;
-            border-radius: 50%;
-            background: transparent;
-            color: var(--muted);
-            font-size: 17px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s;
-        }
-
-        .btn-icon:hover {
-            background: #e5e5e5;
-            color: var(--fg);
-        }
-
-        .btn-send {
-            width: 38px;
-            height: 38px;
-            border: none;
-            border-radius: 50%;
-            background: var(--accent);
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            opacity: 0.4;
-            pointer-events: none;
-        }
-
-        .btn-send.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .btn-send.active:hover {
-            background: var(--accent-hover);
-            transform: scale(1.05);
-        }
-
-        .footer-note {
-            text-align: center;
-            font-size: 12px;
-            color: #bbb;
-            margin-top: 10px;
-        }
+        /* Input */
+        .input-area{padding:0 20px 16px;background:var(--bg);flex-shrink:0}
+        .input-wrapper{max-width:768px;margin:0 auto;position:relative}
+        .input-preview{display:none;padding:6px 0 4px}.input-preview.active{display:block}
+        .preview-item{position:relative;display:inline-block;margin-right:6px}
+        .preview-item img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
+        .preview-rm{position:absolute;top:-5px;right:-5px;width:20px;height:20px;background:#333;color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+        .preview-rm:hover{background:#e53935}
+        .input-box{display:flex;align-items:flex-end;background:var(--card);border:1.5px solid var(--border);border-radius:24px;padding:6px 6px 6px 16px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+        .input-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(16,163,127,.08),0 2px 8px rgba(0,0,0,.03)}
+        #chatInput{flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:14.5px;resize:none;max-height:150px;min-height:24px;line-height:1.5;padding:5px 0;color:var(--fg)}
+        #chatInput::placeholder{color:var(--muted)}
+        .input-actions{display:flex;align-items:center;gap:3px;flex-shrink:0}
+        .btn-icon{width:36px;height:36px;border:none;border-radius:50%;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+        .btn-icon:hover{background:#e5e5e5;color:var(--fg)}
+        .btn-send{width:36px;height:36px;border:none;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;opacity:.35;pointer-events:none}
+        .btn-send.active{opacity:1;pointer-events:auto}
+        .btn-send.active:hover{background:var(--accent-h);transform:scale(1.06)}
+        .btn-send.stop{background:#ef4444;opacity:1;pointer-events:auto}
+        .btn-send.stop:hover{background:#dc2626}
+        .footer-note{text-align:center;font-size:11.5px;color:#c0c0c0;margin-top:8px}
 
         /* Drag overlay */
-        .drag-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(255,255,255,0.92);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 12px;
-            backdrop-filter: blur(8px);
-        }
-
-        .drag-overlay.active { display: flex; }
-
-        .drag-overlay i {
-            font-size: 48px;
-            color: var(--accent);
-        }
-
-        .drag-overlay p {
-            font-size: 17px;
-            font-weight: 600;
-            color: var(--fg);
-        }
+        .drag-ov{display:none;position:fixed;inset:0;background:rgba(255,255,255,.93);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:10px;backdrop-filter:blur(6px)}
+        .drag-ov.active{display:flex}
+        .drag-ov i{font-size:44px;color:var(--accent)}
+        .drag-ov p{font-size:16px;font-weight:600;color:var(--fg)}
 
         /* Toast */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-80px);
-            background: #333;
-            color: #fff;
-            padding: 10px 22px;
-            border-radius: 12px;
-            font-size: 14px;
-            z-index: 200;
-            transition: transform 0.35s ease;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
+        .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);background:#333;color:#fff;padding:9px 20px;border-radius:10px;font-size:13px;z-index:200;transition:transform .3s ease;box-shadow:0 4px 16px rgba(0,0,0,.15);pointer-events:none}
+        .toast.show{transform:translateX(-50%) translateY(0)}
 
-        .toast.show { transform: translateX(-50%) translateY(0); }
+        /* Error msg style */
+        .msg-error{color:#b91c1c;font-style:italic}
 
-        /* Responsif */
-        @media (max-width: 600px) {
-            .suggestions { grid-template-columns: 1fr; }
-            .welcome h1 { font-size: 22px; }
-            .welcome-icon { width: 56px; height: 56px; font-size: 24px; border-radius: 16px; }
-            .msg-image { max-width: 240px; max-height: 200px; }
+        @media(max-width:600px){
+            .suggestions{grid-template-columns:1fr}
+            .welcome h1{font-size:21px}
+            .welcome-icon{width:52px;height:52px;font-size:22px;border-radius:15px}
+            .msg-img{max-width:220px;max-height:180px}
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <header>
-        <div class="logo">
-            <div class="logo-icon">L</div>
-            <div class="logo-text"><span>LEO</span> AI</div>
-        </div>
-    </header>
+<header>
+    <div class="logo">
+        <div class="logo-icon">L</div>
+        <div class="logo-text"><span>LEO</span> AI</div>
+    </div>
+</header>
 
-    <!-- Chat Area -->
-    <div class="chat-container" id="chatContainer">
-        <div class="chat-inner" id="chatInner">
-            <!-- Welcome Screen -->
-            <div class="welcome" id="welcomeScreen">
-                <div class="welcome-icon">L</div>
-                <h1>Halo, ada yang bisa saya bantu?</h1>
-                <p>Saya LEO AI, asisten cerdas Anda. Tanyakan apa saja atau unggah gambar untuk dianalisis.</p>
-                <div class="suggestions">
-                    <div class="suggestion-card" onclick="useSuggestion(this)">
-                        <span class="sc-icon"><i class="fa-solid fa-lightbulb"></i></span>
-                        Jelaskan konsep quantum computing dengan sederhana
-                    </div>
-                    <div class="suggestion-card" onclick="useSuggestion(this)">
-                        <span class="sc-icon"><i class="fa-solid fa-code"></i></span>
-                        Buatkan fungsi JavaScript untuk validasi email
-                    </div>
-                    <div class="suggestion-card" onclick="useSuggestion(this)">
-                        <span class="sc-icon"><i class="fa-solid fa-pen-fancy"></i></span>
-                        Tuliskan paragraf persuasif untuk produk skincare
-                    </div>
-                    <div class="suggestion-card" onclick="useSuggestion(this)">
-                        <span class="sc-icon"><i class="fa-solid fa-image"></i></span>
-                        Unggah gambar lalu saya akan menganalisisnya
-                    </div>
+<div class="chat-container" id="chatContainer">
+    <div class="chat-inner" id="chatInner">
+        <div class="welcome" id="welcomeScreen">
+            <div class="welcome-icon">L</div>
+            <h1>Halo, ada yang bisa saya bantu?</h1>
+            <p>Saya LEO AI, asisten cerdas Anda. Tanyakan apa saja atau unggah gambar untuk dianalisis.</p>
+            <div class="suggestions">
+                <div class="sug-card" onclick="useSug(this)">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    Jelaskan konsep quantum computing dengan sederhana
+                </div>
+                <div class="sug-card" onclick="useSug(this)">
+                    <i class="fa-solid fa-code"></i>
+                    Buatkan fungsi JavaScript untuk validasi email
+                </div>
+                <div class="sug-card" onclick="useSug(this)">
+                    <i class="fa-solid fa-pen-fancy"></i>
+                    Tuliskan paragraf persuasif untuk produk skincare
+                </div>
+                <div class="sug-card" onclick="useSug(this)">
+                    <i class="fa-solid fa-image"></i>
+                    Unggah gambar lalu saya akan menganalisisnya
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Drag Overlay -->
-    <div class="drag-overlay" id="dragOverlay">
-        <i class="fa-solid fa-cloud-arrow-up"></i>
-        <p>Lepaskan gambar di sini</p>
-    </div>
+<div class="drag-ov" id="dragOv">
+    <i class="fa-solid fa-cloud-arrow-up"></i>
+    <p>Lepaskan gambar di sini</p>
+</div>
+<div class="toast" id="toast"></div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
-
-    <!-- Input Area -->
-    <div class="input-area">
-        <div class="input-wrapper">
-            <div class="input-preview" id="inputPreview"></div>
-            <div class="input-box" id="inputBox">
-                <textarea id="chatInput" rows="1" placeholder="Ketik pesan Anda..." aria-label="Pesan"></textarea>
-                <div class="input-actions">
-                    <button class="btn-icon" id="btnUpload" title="Unggah gambar" aria-label="Unggah gambar">
-                        <i class="fa-solid fa-paperclip"></i>
-                    </button>
-                    <button class="btn-send" id="btnSend" title="Kirim" aria-label="Kirim pesan">
-                        <i class="fa-solid fa-arrow-up"></i>
-                    </button>
-                </div>
+<div class="input-area">
+    <div class="input-wrapper">
+        <div class="input-preview" id="inputPreview"></div>
+        <div class="input-box">
+            <textarea id="chatInput" rows="1" placeholder="Ketik pesan Anda..." aria-label="Pesan"></textarea>
+            <div class="input-actions">
+                <button class="btn-icon" id="btnUpload" title="Unggah gambar" aria-label="Unggah gambar">
+                    <i class="fa-solid fa-paperclip"></i>
+                </button>
+                <button class="btn-send" id="btnSend" title="Kirim" aria-label="Kirim">
+                    <i class="fa-solid fa-arrow-up"></i>
+                </button>
             </div>
-            <input type="file" id="fileInput" accept="image/*" hidden>
-            <div class="footer-note">LEO AI dapat membuat kesalahan. Periksa informasi penting.</div>
         </div>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden>
+        <div class="footer-note">LEO AI dapat membuat kesalahan. Periksa informasi penting.</div>
     </div>
+</div>
 
 <script>
-    // === ELEMEN DOM ===
-    const chatContainer = document.getElementById('chatContainer');
-    const chatInner = document.getElementById('chatInner');
-    const welcomeScreen = document.getElementById('welcomeScreen');
-    const chatInput = document.getElementById('chatInput');
-    const btnSend = document.getElementById('btnSend');
-    const btnUpload = document.getElementById('btnUpload');
-    const fileInput = document.getElementById('fileInput');
-    const inputPreview = document.getElementById('inputPreview');
-    const dragOverlay = document.getElementById('dragOverlay');
-    const toast = document.getElementById('toast');
+// ========== DOM ==========
+const chatContainer = document.getElementById('chatContainer');
+const chatInner = document.getElementById('chatInner');
+const welcomeScreen = document.getElementById('welcomeScreen');
+const chatInput = document.getElementById('chatInput');
+const btnSend = document.getElementById('btnSend');
+const btnUpload = document.getElementById('btnUpload');
+const fileInput = document.getElementById('fileInput');
+const inputPreview = document.getElementById('inputPreview');
+const dragOv = document.getElementById('dragOv');
+const toastEl = document.getElementById('toast');
 
-    let pendingImages = []; // array { file, dataUrl }
-    let isGenerating = false;
-    let conversationHistory = [];
+// ========== STATE ==========
+let pendingImages = [];
+let isGenerating = false;
+let currentController = null;
+let conversationHistory = [];
+let renderRAF = null;
 
-    // === AUTO-RESIZE TEXTAREA ===
-    chatInput.addEventListener('input', () => {
-        chatInput.style.height = 'auto';
-        chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
-        toggleSendBtn();
-    });
+const SYSTEM_MSG = {
+    role: 'system',
+    content: `Kamu adalah LEO AI, asisten kecerdasan buatan yang cerdas, ramah, dan sangat membantu. Kamu selalu menjawab dalam Bahasa Indonesia yang natural dan mudah dipahami, kecuali pengguna menulis dalam bahasa lain maka jawab dalam bahasa tersebut.
 
-    function toggleSendBtn() {
-        const hasContent = chatInput.value.trim().length > 0 || pendingImages.length > 0;
-        btnSend.classList.toggle('active', hasContent);
-    }
+Karakteristik jawabanmu:
+- Terstruktur dan informatif
+- Gunakan format Markdown (bold, list, code block, heading) untuk jawaban panjang
+- Singkat untuk pertanyaan sederhana, detail untuk pertanyaan kompleks
+- Tidak perlu menyebutkan kamu AI kecuali ditanya
+- Jika pengguna mengunggah gambar, analisis gambar tersebut secara detail dan membantu
+- Gunakan bahasa yang hangat tapi profesional`
+};
 
-    // === FILE UPLOAD ===
-    btnUpload.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', (e) => {
-        handleFiles(e.target.files);
-        fileInput.value = '';
-    });
-
-    function handleFiles(files) {
-        for (const file of files) {
-            if (!file.type.startsWith('image/')) {
-                showToast('Hanya file gambar yang didukung');
-                continue;
-            }
-            if (file.size > 10 * 1024 * 1024) {
-                showToast('Ukuran gambar maksimal 10MB');
-                continue;
-            }
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                pendingImages.push({ file, dataUrl: ev.target.result });
-                renderPreviews();
-                toggleSendBtn();
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function renderPreviews() {
-        inputPreview.innerHTML = '';
-        if (pendingImages.length === 0) {
-            inputPreview.classList.remove('active');
-            return;
-        }
-        inputPreview.classList.add('active');
-        pendingImages.forEach((img, idx) => {
-            const div = document.createElement('div');
-            div.className = 'preview-item';
-            div.innerHTML = `
-                <img src="${img.dataUrl}" alt="Preview">
-                <button class="preview-remove" onclick="removePreview(${idx})" aria-label="Hapus gambar"><i class="fa-solid fa-xmark"></i></button>
-            `;
-            inputPreview.appendChild(div);
-        });
-    }
-
-    function removePreview(idx) {
-        pendingImages.splice(idx, 1);
-        renderPreviews();
-        toggleSendBtn();
-    }
-
-    // === DRAG & DROP ===
-    let dragCounter = 0;
-    document.addEventListener('dragenter', (e) => {
-        e.preventDefault();
-        dragCounter++;
-        dragOverlay.classList.add('active');
-    });
-    document.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dragCounter--;
-        if (dragCounter <= 0) { dragCounter = 0; dragOverlay.classList.remove('active'); }
-    });
-    document.addEventListener('dragover', (e) => e.preventDefault());
-    document.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dragCounter = 0;
-        dragOverlay.classList.remove('active');
-        handleFiles(e.dataTransfer.files);
-    });
-
-    // === KIRIM PESAN ===
-    chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-    btnSend.addEventListener('click', sendMessage);
-
-    function sendMessage() {
-        if (isGenerating) return;
-        const text = chatInput.value.trim();
-        if (!text && pendingImages.length === 0) return;
-
-        // Sembunyikan welcome
-        if (welcomeScreen) welcomeScreen.style.display = 'none';
-
-        // Buat pesan user
-        const images = [...pendingImages];
-        pendingImages = [];
-        renderPreviews();
-
-        addMessage('user', text, images);
-        conversationHistory.push({ role: 'user', content: text, hasImage: images.length > 0 });
-
-        chatInput.value = '';
-        chatInput.style.height = 'auto';
-        toggleSendBtn();
-
-        // Respons AI
-        isGenerating = true;
-        showTyping();
-
-        // Simulasi delay "berpikir"
-        const delay = 600 + Math.random() * 800;
-        setTimeout(() => {
-            removeTyping();
-            const response = generateResponse(text, images);
-            typeMessage(response);
-        }, delay);
-    }
-
-    function addMessage(role, text, images = []) {
-        const div = document.createElement('div');
-        div.className = 'message';
-
-        const avatarClass = role === 'user' ? 'user-av' : 'ai-av';
-        const avatarText = role === 'user' ? 'Kamu' : 'L';
-        const name = role === 'user' ? 'Kamu' : 'LEO AI';
-
-        let html = `
-            <div class="msg-avatar ${avatarClass}">${avatarText}</div>
-            <div class="msg-body">
-                <div class="msg-name">${name}</div>
-                <div class="msg-content">
-        `;
-
-        if (images.length > 0) {
-            images.forEach(img => {
-                html += `<img class="msg-image" src="${img.dataUrl}" alt="Gambar yang diunggah">`;
-            });
-        }
-
-        if (text) {
-            html += `<p>${escapeHtml(text)}</p>`;
-        }
-
-        html += `</div></div>`;
-        div.innerHTML = html;
-        chatInner.appendChild(div);
-        scrollToBottom();
-    }
-
-    function showTyping() {
-        const div = document.createElement('div');
-        div.className = 'message';
-        div.id = 'typingMsg';
-        div.innerHTML = `
-            <div class="msg-avatar ai-av">L</div>
-            <div class="msg-body">
-                <div class="msg-name">LEO AI</div>
-                <div class="msg-content">
-                    <div class="typing-dots"><span></span><span></span><span></span></div>
-                </div>
-            </div>
-        `;
-        chatInner.appendChild(div);
-        scrollToBottom();
-    }
-
-    function removeTyping() {
-        const el = document.getElementById('typingMsg');
-        if (el) el.remove();
-    }
-
-    // === EFEK MENGETIK ===
-    function typeMessage(fullHtml) {
-        const div = document.createElement('div');
-        div.className = 'message';
-        div.innerHTML = `
-            <div class="msg-avatar ai-av">L</div>
-            <div class="msg-body">
-                <div class="msg-name">LEO AI</div>
-                <div class="msg-content" id="typingTarget"></div>
-            </div>
-        `;
-        chatInner.appendChild(div);
-
-        const target = document.getElementById('typingTarget');
-        // Parse HTML mentah, tampilkan per karakter tapi render tag sebagai blok
-        let i = 0;
-        let buffer = '';
-        const speed = 8; // milidetik per karakter
-
-        function step() {
-            if (i < fullHtml.length) {
-                buffer += fullHtml[i];
-                i++;
-                // Jika kita berada di tengah tag, lanjutkan sampai tag selesai
-                if (buffer.lastIndexOf('<') > buffer.lastIndexOf('>')) {
-                    while (i < fullHtml.length && buffer.lastIndexOf('<') > buffer.lastIndexOf('>')) {
-                        buffer += fullHtml[i];
-                        i++;
-                    }
-                }
-                target.innerHTML = buffer;
-                scrollToBottom();
-                requestAnimationFrame(() => setTimeout(step, speed));
-            } else {
-                target.innerHTML = fullHtml;
-                target.removeAttribute('id');
-                isGenerating = false;
-                conversationHistory.push({ role: 'assistant', content: fullHtml });
-                scrollToBottom();
-            }
-        }
-        step();
-    }
-
-    function scrollToBottom() {
-        requestAnimationFrame(() => {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        });
-    }
-
-    // === UTILITAS ===
-    function escapeHtml(str) {
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
-    function showToast(msg) {
-        toast.textContent = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2500);
-    }
-
-    function useSuggestion(el) {
-        const text = el.textContent.trim();
-        chatInput.value = text;
-        chatInput.dispatchEvent(new Event('input'));
-        sendMessage();
-    }
-
-    // === SISTEM RESPONS AI (LOKAL, TANPA API KEY) ===
-    function generateResponse(userText, images) {
-        const q = userText.toLowerCase();
-
-        // Jika ada gambar
-        if (images && images.length > 0) {
-            return analyzeImage(userText, images[0]);
-        }
-
-        // Deteksi topik & respons kontekstual
-        if (matchAny(q, ['halo','hai','hey','hello','hi ','selamat','pagi','siang','sore','malam'])) {
-            return greetingResponse();
-        }
-        if (matchAny(q, ['siapa kamu','apa kamu','tentang kamu','nama kamu','perkenalan'])) {
-            return aboutResponse();
-        }
-        if (matchAny(q, ['quantum','komputasi quantum','quantum computing','qubit'])) {
-            return quantumResponse();
-        }
-        if (matchAny(q, ['javascript','js','fungsi','validasi email','email validation'])) {
-            return jsEmailValidation();
-        }
-        if (matchAny(q, ['skincare','paragraf persuasif','produk','iklan','copywriting','menulis paragraf'])) {
-            return skincareCopy();
-        }
-        if (matchAny(q, ['python','kode python','belajar python','fungsi python'])) {
-            return pythonResponse();
-        }
-        if (matchAny(q, ['css','flexbox','grid','styling','tata letak'])) {
-            return cssResponse();
-        }
-        if (matchAny(q, ['ai','artificial intelligence','kecerdasan buatan','machine learning','ml','deep learning'])) {
-            return aiResponse();
-        }
-        if (matchAny(q, ['html','web','website','membuat web','halaman web'])) {
-            return htmlResponse();
-        }
-        if (matchAny(q, ['matematika','hitung','kalkulus','aljabar','rumus','persamaan'])) {
-            return mathResponse();
-        }
-        if (matchAny(q, ['terima kasih','makasih','thanks','thank you','thx'])) {
-            return `<p>Sama-sama! Senang bisa membantu Anda. Jika ada pertanyaan lain, jangan ragu untuk bertanya ya. 😊</p>`;
-        }
-        if (matchAny(q, ['cerita','dongeng','story','kisah','narasi'])) {
-            return storyResponse();
-        }
-        if (matchAny(q, ['resep','masakan','memasak','makanan','kuliner'])) {
-            return recipeResponse();
-        }
-        if (matchAny(q, ['tips','saran','rekomendasi','belajar','cara belajar','produktivitas'])) {
-            return tipsResponse();
-        }
-        if (matchAny(q, ['database','sql','mysql','postgres','mongodb'])) {
-            return databaseResponse();
-        }
-        if (matchAny(q, ['api','rest api','endpoint','backend','server'])) {
-            return apiResponse();
-        }
-        if (matchAny(q, ['game','game development','unity','unreal','membuat game'])) {
-            return gameResponse();
-        }
-        if (matchAny(q, ['cuaca','hujan','panas','dingin','prakiraan'])) {
-            return `<p>Saya tidak bisa mengakses data cuaca secara real-time karena saya berjalan secara lokal di peramban Anda tanpa koneksi ke layanan cuaca eksternal.</p><p>Namun, untuk mengecek cuaca terkini, saya sarankan:</p><ul><li>Buka <strong>bmkg.go.id</strong> untuk prakiraan cuaca resmi Indonesia</li><li>Gunakan aplikasi cuaca seperti <strong>Weather.com</strong> atau <strong>AccuWeather</strong></li><li>Periksa fitur cuaca bawaan di ponsel Anda</li></ul><p>Ada hal lain yang bisa saya bantu?</p>`;
-        }
-
-        // Fallback: respons generik cerdas
-        return genericResponse(userText);
-    }
-
-    function matchAny(text, keywords) {
-        return keywords.some(k => text.includes(k));
-    }
-
-    function greetingResponse() {
-        const greetings = [
-            `<p>Halo! Saya LEO AI, asisten Anda. Ada yang bisa saya bantu hari ini? Baik itu pertanyaan seputar teknologi, pemrograman, penulisan, analisis, atau sekadar ngobrol — saya siap membantu.</p>`,
-            `<p>Hai, senang bertemu dengan Anda! Saya di sini untuk membantu menjawab pertanyaan, menulis kode, membuat konten, atau apa pun yang Anda butuhkan. Silakan bertanya! 😊</p>`,
-            `<p>Selamat datang! Saya LEO AI. Apa yang ingin Anda diskusikan hari ini? Saya bisa membantu di berbagai bidang — dari teknologi hingga kreativitas.</p>`
-        ];
-        return greetings[Math.floor(Math.random() * greetings.length)];
-    }
-
-    function aboutResponse() {
-        return `<p>Saya <strong>LEO AI</strong>, asisten kecerdasan buatan yang dirancang untuk membantu Anda dalam berbagai tugas:</p>
-        <ul>
-            <li><strong>Menjawab pertanyaan</strong> — dari sains, teknologi, hingga kehidupan sehari-hari</li>
-            <li><strong>Menulis kode</strong> — JavaScript, Python, HTML/CSS, dan banyak lagi</li>
-            <li><strong>Menganalisis gambar</strong> — unggah foto dan saya akan memberikan deskripsi serta analisis</li>
-            <li><strong>Membuat konten</strong> — copywriting, cerita, paragraf persuasif, dll.</li>
-            <li><strong>Membelajarkan konsep</strong> — dengan penjelasan yang sederhana dan mudah dipahami</li>
-        </ul>
-        <p>Saya berjalan sepenuhnya di peramban Anda — tanpa perlu koneksi ke server eksternal, sehingga respons saya cepat dan privat.</p>`;
-    }
-
-    function quantumResponse() {
-        return `<h3>Quantum Computing dengan Cara Sederhana</h3>
-        <p>Bayangkan komputer biasa seperti <strong>lampu saklar</strong> — hanya bisa nyala (1) atau mati (0). Itu disebut <strong>bit</strong>.</p>
-        <p>Nah, komputer quantum menggunakan <strong>qubit</strong> yang seperti <strong>koin yang sedang diputar</strong> — bisa jadi kepala DAN ekor <em>di saat yang sama</em>. Ini disebut <strong>superposisi</strong>.</p>
-        <p>Lalu ada <strong>entanglement</strong> — dua qubit yang "terhubung secara misterius". Kalau satu qubit bernilai 0, qubit pasangannya langsung tahu, seberapa jarak pun mereka berada.</p>
-        <p><strong>Mengapa ini penting?</strong></p>
-        <ul>
-            <li>Komputer biasa mengecek password satu per satu</li>
-            <li>Komputer quantum bisa mengecek <strong>jutaan kemungkinan secara bersamaan</strong></li>
-        </ul>
-        <p><strong>Aplikasi nyata:</strong></p>
-        <ul>
-            <li>Penemuan obat baru (simulasi molekul)</li>
-            <li>Optimasi logistik & keuangan</li>
-            <li>Enkripsi & keamanan data</li>
-            <li>AI yang jauh lebih cepat</li>
-        </ul>
-        <p>Tantangan saat ini: qubit sangat sensitif terhadap gangguan (noise), sehingga butuh suhu mendekati <strong>absolut nol (-273°C)</strong>. Tapi perkembangannya sangat pesat!</p>`;
-    }
-
-    function jsEmailValidation() {
-        return `<p>Berikut beberapa cara memvalidasi email di JavaScript, dari yang paling sederhana hingga yang paling robust:</p>
-        <h3>1. Regex Sederhana</h3>
-        <pre>function isValidEmail(email) {
-  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
-}
-
-console.log(isValidEmail("user@example.com")); // true
-console.log(isValidEmail("email-salah"));       // false</pre>
-        <h3>2. Regex Lebih Ketat</h3>
-        <pre>function validateEmail(email) {
-  const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;
-  return re.test(String(email).toLowerCase());
-}</pre>
-        <h3>3. Dengan HTML5 (Tanpa JS)</h3>
-        <pre>&lt;input type="email" required
-       placeholder="email@contoh.com"&gt;</pre>
-        <h3>4. Validasi Lanjutan dengan Detail Error</h3>
-        <pre>function detailedEmailCheck(email) {
-  if (!email) return { valid: false, msg: "Email wajib diisi" };
-  if (email.length > 254) return { valid: false, msg: "Terlalu panjang" };
-  if (!email.includes("@")) return { valid: false, msg: "Harus mengandung @" };
-  
-  const [local, domain] = email.split("@");
-  if (!local || !domain) return { valid: false, msg: "Format salah" };
-  if (domain.split(".").length < 2) return { valid: false, msg: "Domain tidak valid" };
-  
-  return { valid: true, msg: "Email valid" };
-}</pre>
-        <p><strong>Tips:</strong> Untuk produksi, selalu lakukan validasi di <em>backend</em> juga — validasi frontend hanya untuk UX, bukan keamanan.</p>`;
-    }
-
-    function skincareCopy() {
-        return `<p>Berikut paragraf persuasif untuk produk skincare:</p>
-        <p><strong>"Kulit Anda Bicara — Sudahkah Anda Mendengarkan?"</strong></p>
-        <p>Setiap hari, kulit kita bertarung melawan polusi, sinar UV, dan stres yang tak kasat mata. Tanpa perawatan yang tepat, tanda-tanda penuaan bukan sekadar ancaman di masa depan — mereka sudah mulai muncul sekarang.</p>
-        <p><strong>GlowSerum Pro</strong> bukan sekadar serum biasa. Diformulasikan dengan <strong>Niacinamide 10%</strong>, <strong>Hyaluronic Acid Triple Complex</strong>, dan ekstrak <strong>Centella Asiatica</strong> dari dataran tinggi Korea, serum ini menembus 3 lapisan kulit dalam 60 detik.</p>
-        <p>Dalam 7 hari pertama, 94% pengguna melihat:</p>
-        <ul>
-            <li>Pori-pori mengecil secara nyata</li>
-            <li>Noda gelap memudar hingga 40%</li>
-            <li>Kulit terasa lebih kenyal dan plump</li>
-            <li>Glow alami yang bertahan sepanjang hari</li>
-        </ul>
-        <p>Tanpa alkohol. Tanpa paraben. Tanpa pewarna buatan. Hanya bahan aktif yang terbukti klinis.</p>
-        <p><em>"Saya sudah coba puluhan serum mahal, tapi baru kali ini kulit saya benar-benar berubah." — Rina, 29 tahun</em></p>
-        <p>Mulai perjalanan kulit sehat Anda hari ini. Karena Anda layak bersinar, bukan sekadar terlihat baik.</p>`;
-    }
-
-    function analyzeImage(text, imageObj) {
-        const fileName = imageObj.file.name.toLowerCase();
-        const fileSize = (imageObj.file.size / 1024).toFixed(1);
-
-        // Deteksi jenis gambar dari nama file
-        let detectedType = 'umum';
-        let analysis = '';
-
-        if (matchAny(fileName, ['selfie','foto','wajah','portrait','face'])) {
-            detectedType = 'potret/foto wajah';
-            analysis = `<p>Saya melihat sebuah gambar yang tampaknya berupa <strong>foto potret/wajah</strong>. Berikut analisis saya:</p>
-            <ul>
-                <li><strong>Jenis:</strong> Foto potret</li>
-                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
-                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
-                <li><strong>Kualitas:</strong> Gambar terlihat jelas dengan komposisi yang fokus pada subjek</li>
-            </ul>
-            <p><strong>Catatan:</strong> Analisis visual saya saat ini berbasis metadata dan konteks nama file. Untuk analisis mendalam (deteksi emosi, usia, dll), diperlukan model computer vision yang lebih canggih.</p>`;
-        } else if (matchAny(fileName, ['screenshot','ss','tangkapan','screen'])) {
-            detectedType = 'screenshot';
-            analysis = `<p>Ini tampaknya merupakan <strong>screenshot</strong> dari layar perangkat.</p>
-            <ul>
-                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
-                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
-            </ul>
-            <p>Saya belum bisa membaca teks dalam gambar secara langsung (OCR). Namun jika Anda mengetik ulang konten screenshot tersebut, saya bisa membantu menganalisis, menjelaskan, atau mengerjakan tugas berdasarkan isinya.</p>`;
-        } else if (matchAny(fileName, ['meme','funny','lucu','humor'])) {
-            detectedType = 'meme';
-            analysis = `<p>Saya melihat apa yang tampaknya sebuah <strong>meme</strong>!</p>
-            <ul>
-                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
-                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
-            </ul>
-            <p>Meme adalah bentuk komunikasi visual yang menarik. Kalau Anda mau, saya bisa:</p>
-            <ul>
-                <li>Membuat caption alternatif untuk meme ini</li>
-                <li>Menjelaskan konteks atau referensi budaya di dalamnya</li>
-                <li>Membuat variasi meme serupa dalam bentuk teks</li>
-            </ul>`;
-        } else if (matchAny(fileName, ['logo','brand','ikon','icon'])) {
-            detectedType = 'logo/ikon';
-            analysis = `<p>Ini tampaknya berupa <strong>logo atau ikon</strong>.</p>
-            <ul>
-                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
-                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
-            </ul>
-            <p>Saya bisa membantu Anda terkait logo ini:</p>
-            <ul>
-                <li><strong>Evaluasi desain</strong> — apakah logo efektif, mudah diingat, dan scalable</li>
-                <li><strong>Saran perbaikan</strong> — tipografi, warna, komposisi</li>
-                <li><strong>Variasi</strong> — ide untuk versi monokrom, horizontal, favicon</li>
-            </ul>`;
-        } else if (matchAny(fileName, ['cat','kucing','dog','anjing','pet','hewan','animal'])) {
-            detectedType = 'foto hewan peliharaan';
-            analysis = `<p>Aww! Ini tampaknya foto <strong>hewan peliharaan</strong>! 🐾</p>
-            <ul>
-                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
-                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
-            </ul>
-            <p>Foto hewan selalu menyenangkan dilihat! Jika Anda memberi tahu saya jenis hewannya, saya bisa:</p>
-            <ul>
-                <li>Memberikan tips perawatan spesifik</li>
-                <li>Menjelaskan karakteristik dan perilaku uniknya</li>
-                <li>Merekomendasikan makanan dan aksesoris</li>
-                <li>Membuat caption media sosial yang lucu</li>
-            </ul>`;
-        } else {
-            analysis = `<p>Saya telah menerima gambar yang Anda unggah. Berikut informasi yang bisa saya ekstrak:</p>
-            <ul>
-                <li><strong>Nama file:</strong> ${escapeHtml(imageObj.file.name)}</li>
-                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
-                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
-                <li><strong>Waktu unggah:</strong> ${new Date().toLocaleString('id-ID')}</li>
-            </ul>
-            <p>Saya bisa membantu lebih spesifik jika Anda:</p>
-            <ul>
-                <li>Menjelaskan apa yang ada di gambar</li>
-                <li>Bertanya sesuatu tentang konten gambar</li>
-                <li>Meminta saya menganalisis aspek tertentu</li>
-            </ul>`;
-        }
-
-        // Jika user juga menulis pesan bersama gambar
-        if (text && text.trim()) {
-            analysis = `<p>Saya melihat gambar yang Anda unggah (${escapeHtml(imageObj.file.name)}, ${fileSize} KB) bersama pertanyaan: <strong>"${escapeHtml(text)}"</strong></p>` + analysis;
-        }
-
-        return analysis;
-    }
-
-    function pythonResponse() {
-        return `<p>Python adalah salah satu bahasa pemrograman yang paling populer dan mudah dipelajari. Berikut contoh-contoh yang sering dicari:</p>
-        <h3>1. Fungsi Dasar</h3>
-        <pre>def sapa(nama, waktu="pagi"):
-    """Fungsi menyapa dengan parameter default"""
-    return f"Selamat {waktu}, {nama}!"
-
-print(sapa("Budi"))          # Selamat pagi, Budi!
-print(sapa("Ani", "malam"))  # Selamat malam, Ani!</pre>
-        <h3>2. List Comprehension</h3>
-        <pre># Menghasilkan kuadrat dari bilangan genap 1-20
-kuadrat_genap = [x**2 for x in range(1, 21) if x % 2 == 0]
-print(kuadrat_genap)  # [4, 16, 36, 64, 100, 144, 196, 256, 324, 400]</pre>
-        <h3>3. Membaca & Menulis File</h3>
-        <pre># Menulis file
-with open("data.txt", "w") as f:
-    f.write("Halo dari Python!\\n")
-
-# Membaca file
-with open("data.txt", "r") as f:
-    isi = f.read()
-    print(isi)</pre>
-        <h3>4. Dictionary Manipulation</h3>
-        <pre>mahasiswa = {
-    "nama": "Dina",
-    "jurusan": "Informatika",
-    "IPK": 3.87
-}
-
-# Akses & update
-print(mahasiswa.get("nama"))        # Dina
-mahasiswa["semester"] = 6
-print(list(mahasiswa.keys()))       # ['nama', 'jurusan', 'IPK', 'semester']</pre>
-        <p>Mau belajar topik Python yang lebih spesifik? Tanyakan saja!</p>`;
-    }
-
-    function cssResponse() {
-        return `<p>Berikut panduan singkat tentang layout modern di CSS:</p>
-        <h3>Flexbox vs Grid — Kapan Pakai Apa?</h3>
-        <p><strong>Flexbox</strong> → Untuk layout 1 dimensi (baris ATAU kolom)</p>
-        <pre>.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-  height: 64px;
-}</pre>
-        <p><strong>Grid</strong> → Untuk layout 2 dimensi (baris DAN kolom)</p>
-        <pre>.dashboard {
-  display: grid;
-  grid-template-columns: 250px 1fr 300px;
-  grid-template-rows: 64px 1fr 48px;
-  grid-template-areas:
-    "sidebar header  header"
-    "sidebar main    aside"
-    "sidebar footer  footer";
-  min-height: 100vh;
-  gap: 1px;
-}</pre>
-        <h3>Tips Cepat</h3>
-        <ul>
-            <li>Gunakan <code>gap</code> instead of margin untuk spacing antar item</li>
-            <li><code>flex-wrap: wrap</code> membuat item otomatis pindah baris</li>
-            <li><code>place-items: center</code> = <code>align-items + justify-items</code> sekaligus</li>
-            <li><code>minmax(200px, 1fr)</code> membuat grid responsif tanpa media query</li>
-        </ul>
-        <p>Ada layout spesifik yang ingin Anda buat? Deskripsikan saja!</p>`;
-    }
-
-    function aiResponse() {
-        return `<p>Topik yang sangat menarik! Mari saya jelaskan AI secara terstruktur:</p>
-        <h3>Hirarki AI</h3>
-        <ul>
-            <li><strong>Artificial Intelligence (AI)</strong> — Konsep umum: mesin yang bisa "berpikir"</li>
-            <li><strong>Machine Learning (ML)</strong> — Mesin belajar dari data tanpa diprogram eksplisit</li>
-            <li><strong>Deep Learning (DL)</strong> — ML dengan jaringan saraf berlapis-lapis</li>
-        </ul>
-        <h3>Jenis-jenis ML</h3>
-        <ul>
-            <li><strong>Supervised Learning</strong> — Belajar dari data berlabel (klasifikasi, regresi)</li>
-            <li><strong>Unsupervised Learning</strong> — Mencari pola tanpa label (clustering, dimensi reduksi)</li>
-            <li><strong>Reinforcement Learning</strong> — Belajar dari trial & error dengan reward (game AI, robotik)</li>
-        </ul>
-        <h3>Aplikasi AI Saat Ini</h3>
-        <ul>
-            <li><strong>NLP</strong> — ChatGPT, Gemini, penerjemahan bahasa</li>
-            <li><strong>Computer Vision</strong> — Deteksi wajah, mobil otonom, analisis medis</li>
-            <li><strong>Generative AI</strong> — Midjourney, DALL-E, Suno (musik)</li>
-            <li><strong>Rekomendasi</strong> — Netflix, Spotify, TikTok algorithm</li>
-        </ul>
-        <p>Ingin mendalami topik tertentu dalam AI? Saya bisa jelaskan lebih detail!</p>`;
-    }
-
-    function htmlResponse() {
-        return `<p>HTML adalah tulang punggung setiap halaman web. Berikut struktur modern yang baik:</p>
-        <pre>&lt;!DOCTYPE html&gt;
-&lt;html lang="id"&gt;
-&lt;head&gt;
-  &lt;meta charset="UTF-8"&gt;
-  &lt;meta name="viewport" 
-        content="width=device-width, initial-scale=1.0"&gt;
-  &lt;title&gt;Halaman Saya&lt;/title&gt;
-  &lt;link rel="stylesheet" href="style.css"&gt;
-&lt;/head&gt;
-&lt;body&gt;
-  &lt;header&gt;
-    &lt;nav aria-label="Navigasi utama"&gt;
-      &lt;a href="/"&gt;Beranda&lt;/a&gt;
-      &lt;a href="/tentang"&gt;Tentang&lt;/a&gt;
-      &lt;a href="/kontak"&gt;Kontak&lt;/a&gt;
-    &lt;/nav&gt;
-  &lt;/header&gt;
-  
-  &lt;main&gt;
-    &lt;article&gt;
-      &lt;h1&gt;Judul Utama&lt;/h1&gt;
-      &lt;p&gt;Konten artikel...&lt;/p&gt;
-    &lt;/article&gt;
-  &lt;/main&gt;
-  
-  &lt;footer&gt;
-    &lt;p&gt;&amp;copy; 2025 Nama Anda&lt;/p&gt;
-  &lt;/footer&gt;
-&lt;/body&gt;
-&lt;/html&gt;</pre>
-        <h3>Tag Semantik yang Wajib Diketahui</h3>
-        <ul>
-            <li><code>&lt;header&gt;</code> <code>&lt;nav&gt;</code> <code>&lt;main&gt;</code> <code>&lt;footer&gt;</code> — Struktur halaman</li>
-            <li><code>&lt;article&gt;</code> <code>&lt;section&gt;</code> <code>&lt;aside&gt;</code> — Konten</li>
-            <li><code>&lt;figure&gt;</code> <code>&lt;figcaption&gt;</code> — Gambar dengan keterangan</li>
-            <li><code>&lt;time&gt;</code> <code>&lt;mark&gt;</code> <code>&lt;abbr&gt;</code> — Data mikro</li>
-        </ul>
-        <p>Semantik HTML penting untuk <strong>aksesibilitas</strong> dan <strong>SEO</strong>. Ingin saya bantu membuat halaman HTML lengkap?</p>`;
-    }
-
-    function mathResponse() {
-        return `<p>Matematika itu menyenangkan ketika dipahami! Berikut beberapa konsep dasar yang sering ditanyakan:</p>
-        <h3>1. Persamaan Kuadrat</h3>
-        <p>ax² + bx + c = 0, diselesaikan dengan rumus ABC:</p>
-        <pre>x = (-b ± √(b² - 4ac)) / 2a</pre>
-        <p><strong>Contoh:</strong> 2x² + 5x - 3 = 0</p>
-        <pre>a=2, b=5, c=-3
-D = 25 - 4(2)(-3) = 25 + 24 = 49
-x₁ = (-5 + 7) / 4 = 0.5
-x₂ = (-5 - 7) / 4 = -3</pre>
-        <h3>2. Turunan Dasar</h3>
-        <ul>
-            <li>d/dx (xⁿ) = nxⁿ⁻¹</li>
-            <li>d/dx (sin x) = cos x</li>
-            <li>d/dx (eˣ) = eˣ</li>
-            <li>d/dx (ln x) = 1/x</li>
-        </ul>
-        <h3>3. Integral Dasar</h3>
-        <ul>
-            <li>∫xⁿ dx = xⁿ⁺¹/(n+1) + C</li>
-            <li>∫eˣ dx = eˣ + C</li>
-            <li>∫1/x dx = ln|x| + C</li>
-        </ul>
-        <p>Masalah matematika spesifik apa yang ingin saya selesaikan?</p>`;
-    }
-
-    function storyResponse() {
-        return `<p>Baik, ini cerita pendek untuk Anda:</p>
-        <h3>Cahaya di Ujung Lorong</h3>
-        <p>Di sebuah kota tua yang selalu diselimuti kabut, hiduplah seorang gadis bernama Kirana yang bekerja sebagai tukang jam di toko kecilnya. Setiap malam, setelah toko tutup, ia mendengar suara denting jam dari lorong gelap di belakang tokonya.</p>
-        <p>Orang-orang memperingatkannya. "Jangan pernah masuk ke lorong itu," bisik Nenek Maya, tetangganya. "Orang yang masuk tidak pernah kembali sama."</p>
-        <p>Tapi suara itu bukan menakutkan — ia seperti melodi. Seperti seseorang yang memainkan piano dengan sangat lembut, menunggu pendengar yang tepat.</p>
-        <p>Suatu malam, saat bulan purnama menembus kabut untuk pertama kalinya dalam bertahun-tahun, Kirana mengambil lampu minyaknya dan berjalan masuk.</p>
-        <p>Lorong itu tidak gelap seperti yang dibayangkan. Dinding-dindingnya dipenuhi jam dinding dari berbagai era — ratusan, mungkin ribuan — semuanya berdetak dalam harmoni yang sempurna. Dan di ujung lorong, duduk seorang lelaki tua dengan mata berwarna emas, menyesuaikan roda gigi jam terbesar yang pernah Kirana lihat.</p>
-        <p>"Kamu akhirnya datang," kata lelaki itu tanpa menoleh. "Aku sudah menunggu seseorang yang bisa mendengar melodi ini selama tujuh puluh tahun."</p>
-        <p>"Siapa kau?" tanya Kirana.</p>
-        <p>"Aku adalah Waktu," jawabnya. "Dan aku butuh seseorang untuk menggantikanku menjaga jam-jam ini. Karena Waktu tidak bisa berhenti — tapi Waktu bisa belajar melepaskan."</p>
-        <p>Kirana menatap ribuan jam yang berdetak, merasakan getaran harmoni itu di tulang-tulangnya. Untuk pertama kalinya dalam hidup, ia merasa tepat berada di tempat yang seharusnya.</p>
-        <p><em>Dan kabut pun mulai sirna dari kota itu.</em></p>`;
-    }
-
-    function recipeResponse() {
-        return `<p>Berikut resep sederhana yang bisa langsung dicoba:</p>
-        <h3>Nasi Goreng Spesial</h3>
-        <p><strong>Waktu:</strong> 15 menit | <strong>Porsi:</strong> 2</p>
-        <p><strong>Bahan:</strong></p>
-        <ul>
-            <li>2 piring nasi putih (dingin/sisa semalam)</li>
-            <li>2 butir telur ayam</li>
-            <li>3 siung bawang putih, cincang halus</li>
-            <li>5 butir bawang merah, iris tipis</li>
-            <li>2 sdm kecap manis</li>
-            <li>1 sdm saus tiram</li>
-            <li>1 sdt cabai giling (sesuai selera)</li>
-            <li>Garam & merica secukupnya</li>
-            <li>Minyak goreng</li>
-            <li> pelengkap: kerupuk, acar, timun</li>
-        </ul>
-        <p><strong>Langkah:</strong></p>
-        <ol>
-            <li>Panaskan wajan dengan api besar, tuang minyak secukupnya</li>
-            <li>Tumis bawang putih & bawang merah hingga harum</li>
-            <li>Masukkan telur, orak-arik kasar</li>
-            <li>Masukkan nasi, aduk rata dengan api besar</li>
-            <li>Tambahkan kecap manis, saus tiram, cabai giling, garam, merica</li>
-            <li>Aduk terus selama 3-4 menit hingga nasi "bersuara" dan bumbu merata</li>
-            <li>Sajikan dengan kerupuk dan pelengkap lainnya</li>
-        </ol>
-        <p><strong>Tips rahasia:</strong> Kunci nasi goreng enak adalah nasi yang benar-benar dingin dan api yang benar-benar besar. Jangan pernah menggunakan nasi hangat — hasilnya akan lembek!</p>`;
-    }
-
-    function tipsResponse() {
-        return `<p>Berikut tips produktivitas yang terbukti efektif secara ilmiah:</p>
-        <h3>1. Teknik Pomodoro</h3>
-        <p>Kerja fokus selama <strong>25 menit</strong>, lalu istirahat <strong>5 menit</strong>. Setelah 4 siklus, istirahat panjang 15-30 menit. Ini menjaga otak tetap segar tanpa kelelahan.</p>
-        <h3>2. Aturan 2 Menit</h3>
-        <p>Jika sebuah tugas bisa diselesaikan dalam 2 menit — <strong>kerjakan sekarang juga</strong>. Jangan ditunda, jangan dimasukkan ke daftar. Selesaikan langsung.</p>
-        <h3>3. Eat the Frog</h3>
-        <p>Kerjakan tugas yang <strong>paling sulit/paling tidak disukai</strong> di pagi hari. Setelah itu, semua tugas lain terasa lebih ringan.</p>
-        <h3>4. Deep Work Blocks</h3>
-        <p>Alokasikan <strong>2-4 jam tanpa gangguan</strong> setiap hari. Matikan notifikasi, tutup tab yang tidak perlu, fokus pada satu hal penting.</p>
-        <h3>5. Journaling Malam</h3>
-        <p>Sebelum tidur, tulis 3 hal:</p>
-        <ul>
-            <li>Apa yang sudah dicapai hari ini?</li>
-            <li>Apa yang bisa diperbaiki?</li>
-            <li>3 prioritas utama besok</li>
-        </ul>
-        <p>Ingin saya bantu menyusun jadwal produktivitas yang disesuaikan dengan rutinitas Anda?</p>`;
-    }
-
-    function databaseResponse() {
-        return `<p>Berikut perbandingan singkat sistem database yang populer:</p>
-        <h3>SQL vs NoSQL</h3>
-        <ul>
-            <li><strong>SQL (MySQL, PostgreSQL)</strong> — Data terstruktur, skema tetap, relasi antar tabel. Cocok untuk: sistem keuangan, ERP, data yang konsisten.</li>
-            <li><strong>NoSQL (MongoDB, Redis)</strong> — Fleksibel, skema dinamis, cocok untuk: data tidak terstruktur, real-time, scaling horizontal.</li>
-        </ul>
-        <h3>Contoh Query SQL Dasar</h3>
-        <pre>-- Membuat tabel
-CREATE TABLE users (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  nama VARCHAR(100) NOT NULL,
-  email VARCHAR(150) UNIQUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Insert data
-INSERT INTO users (nama, email) 
-VALUES ('Budi', 'budi@email.com');
-
--- Query dengan JOIN
-SELECT u.nama, p.judul 
-FROM users u
-JOIN posts p ON u.id = p.user_id
-WHERE u.nama LIKE '%Budi%';</pre>
-        <h3>Contoh MongoDB</h3>
-        <pre>// Insert
-db.users.insertOne({
-  nama: "Budi",
-  email: "budi@email.com",
-  hobbies: ["coding", "gaming"]
+// ========== TEXTAREA ==========
+chatInput.addEventListener('input', () => {
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
+    toggleSend();
 });
 
-// Query
-db.users.find({
-  hobbies: "coding"
-});</pre>
-        <p>Mau belajar database yang lebih spesifik?</p>`;
+function toggleSend() {
+    const has = chatInput.value.trim().length > 0 || pendingImages.length > 0;
+    if (!isGenerating) {
+        btnSend.classList.toggle('active', has);
+    }
+}
+
+// ========== FILE UPLOAD ==========
+btnUpload.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
+
+function handleFiles(files) {
+    for (const f of files) {
+        if (!f.type.startsWith('image/')) { showToast('Hanya file gambar yang didukung'); continue; }
+        if (f.size > 15 * 1024 * 1024) { showToast('Ukuran maksimal 15MB'); continue; }
+        const reader = new FileReader();
+        reader.onload = ev => {
+            pendingImages.push({ file: f, dataUrl: ev.target.result });
+            renderPreviews();
+            toggleSend();
+        };
+        reader.readAsDataURL(f);
+    }
+}
+
+function renderPreviews() {
+    inputPreview.innerHTML = '';
+    if (!pendingImages.length) { inputPreview.classList.remove('active'); return; }
+    inputPreview.classList.add('active');
+    pendingImages.forEach((img, i) => {
+        const d = document.createElement('div');
+        d.className = 'preview-item';
+        d.innerHTML = `<img src="${img.dataUrl}" alt="Preview"><button class="preview-rm" onclick="rmPreview(${i})" aria-label="Hapus"><i class="fa-solid fa-xmark"></i></button>`;
+        inputPreview.appendChild(d);
+    });
+}
+
+function rmPreview(i) { pendingImages.splice(i, 1); renderPreviews(); toggleSend(); }
+
+// ========== DRAG & DROP ==========
+let dragN = 0;
+document.addEventListener('dragenter', e => { e.preventDefault(); dragN++; dragOv.classList.add('active'); });
+document.addEventListener('dragleave', e => { e.preventDefault(); dragN--; if (dragN <= 0) { dragN = 0; dragOv.classList.remove('active'); } });
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => { e.preventDefault(); dragN = 0; dragOv.classList.remove('active'); handleFiles(e.dataTransfer.files); });
+
+// ========== KOMPRESI GAMBAR ==========
+function compressImage(dataUrl, maxW = 1024) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+            if (h > maxW) { w = Math.round(w * maxW / h); h = maxW; }
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(c.toDataURL('image/jpeg', 0.7));
+        };
+        img.src = dataUrl;
+    });
+}
+
+// ========== KIRIM PESAN ==========
+chatInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (isGenerating) { if (currentController) currentController.abort(); }
+        else sendMessage();
+    }
+});
+btnSend.addEventListener('click', () => {
+    if (isGenerating) { if (currentController) currentController.abort(); }
+    else sendMessage();
+});
+
+function useSug(el) {
+    chatInput.value = el.textContent.trim();
+    chatInput.dispatchEvent(new Event('input'));
+    sendMessage();
+}
+
+async function sendMessage() {
+    if (isGenerating) return;
+    const text = chatInput.value.trim();
+    if (!text && !pendingImages.length) return;
+
+    if (welcomeScreen) welcomeScreen.style.display = 'none';
+
+    const images = [...pendingImages];
+    pendingImages = [];
+    renderPreviews();
+
+    addMessage('user', text, images);
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    toggleSend();
+
+    // Kompres gambar untuk API
+    const compressed = [];
+    for (const img of images) {
+        try { compressed.push({ ...img, dataUrl: await compressImage(img.dataUrl) }); }
+        catch { compressed.push(img); }
     }
 
-    function apiResponse() {
-        return `<p>Berikut panduan singkat tentang REST API:</p>
-        <h3>Apa itu REST API?</h3>
-        <p>REST (Representational State Transfer) adalah arsitektur komunikasi antar sistem menggunakan <strong>HTTP method</strong>.</p>
-        <h3>HTTP Methods</h3>
-        <ul>
-            <li><strong>GET</strong> — Ambil data</li>
-            <li><strong>POST</strong> — Buat data baru</li>
-            <li><strong>PUT</strong> — Update data (seluruhnya)</li>
-            <li><strong>PATCH</strong> — Update data (sebagian)</li>
-            <li><strong>DELETE</strong> — Hapus data</li>
-        </ul>
-        <h3>Contoh dengan JavaScript Fetch</h3>
-        <pre>// GET - Ambil data
-const response = await fetch('https://api.example.com/users');
-const users = await response.json();
-
-// POST - Buat data baru
-const newUser = await fetch('https://api.example.com/users', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    nama: 'Budi',
-    email: 'budi@email.com'
-  })
-}).then(res => res.json());</pre>
-        <h3>Status Code Penting</h3>
-        <ul>
-            <li><code>200</code> OK — Berhasil</li>
-            <li><code>201</code> Created — Berhasil dibuat</li>
-            <li><code>400</code> Bad Request — Kesalahan dari klien</li>
-            <li><code>401</code> Unauthorized — Belum login</li>
-            <li><code>404</code> Not Found — Resource tidak ada</li>
-            <li><code>500</code> Server Error — Kesalahan server</li>
-        </ul>
-        <p>Butuh bantuan membuat API atau mengintegrasi API tertentu?</p>`;
+    // Bangun konten pesan untuk API
+    let apiContent;
+    if (compressed.length > 0) {
+        const parts = [];
+        if (text) parts.push({ type: 'text', text: text });
+        for (const img of compressed) {
+            parts.push({ type: 'image_url', image_url: { url: img.dataUrl } });
+        }
+        apiContent = parts;
+    } else {
+        apiContent = text;
     }
 
-    function gameResponse() {
-        return `<p>Game development adalah bidang yang menarik! Berikut gambaran umum:</p>
-        <h3>Engine Populer</h3>
-        <ul>
-            <li><strong>Unity</strong> — C#, paling populer untuk indie & mobile. 70% game mobile dibuat dengan Unity.</li>
-            <li><strong>Unreal Engine</strong> — C++ / Blueprints, grafik AAA, cocok untuk game 3D realistis.</li>
-            <li><strong>Godot</strong> — GDScript/C#, open-source, naik daun, ringan.</li>
-        </ul>
-        <h3>Jika Mau Mulai dari Nol</h3>
-        <ol>
-            <li><strong>Pilih engine</strong> — Untuk pemula, saya rekomendasikan Godot (gratis, ringan) atau Unity (komunitas besar)</li>
-            <li><strong>Belajar dasar</strong> — Variabel, loop, kondisi, fungsi</li>
-            <li><strong>Clone game sederhana</strong> — Pong → Flappy Bird → Platformer → Game Anda sendiri</li>
-            <li><strong>Belajar aset</strong> — Blender untuk 3D, Aseprite untuk pixel art, BFXR untuk sound</li>
-        </ol>
-        <h3>Game Paling Mudah untuk Pertama Kali</h3>
-        <pre>// Godot - Gerakan pemain sederhana
-extends CharacterBody2D
-
-const SPEED = 300
-
-func _physics_process(delta):
-    var input = Vector2.ZERO
-    input.x = Input.get_axis("ui_left", "ui_right")
-    input.y = Input.get_axis("ui_up", "ui_down")
-    
-    velocity = input * SPEED
-    move_and_slide()</pre>
-        <p>Tertarik membuat game dengan genre tertentu? Saya bisa bantu merancang mekanik dan arsitekturnya!</p>`;
+    // Simpan ke history (tanpa base64 besar)
+    if (compressed.length > 0) {
+        const imgDesc = compressed.map(im => `[Gambar: ${im.file.name}, ${im.file.type}, ${(im.file.size/1024).toFixed(0)}KB]`).join('\n');
+        conversationHistory.push({ role: 'user', content: imgDesc + (text ? '\n' + text : '\nAnalisis gambar ini.') });
+    } else {
+        conversationHistory.push({ role: 'user', content: text });
     }
 
-    function genericResponse(text) {
-        const len = text.length;
-        const words = text.split(/\s+/);
+    // Batasi history
+    if (conversationHistory.length > 24) {
+        conversationHistory = conversationHistory.slice(-24);
+    }
 
-        // Deteksi apakah ini pertanyaan
-        const isQuestion = matchAny(text.toLowerCase(), ['?','apa','bagaimana','mengapa','kapan','siapa','di mana','berapa','bisa','bisakah','adakah','jelaskan','tolong','help']);
+    // Mulai generate
+    isGenerating = true;
+    updateBtnStop();
+    showTyping();
 
-        if (isQuestion) {
-            return `<p>Pertanyaan yang menarik! Mari saya coba menjawab:</p>
-            <p>Mengenai <strong>"${escapeHtml(text.substring(0, 80))}${len > 80 ? '...' : ''}"</strong> — ini adalah topik yang cukup luas. Saya akan memberikan gambaran umum:</p>
-            <p>Pertanyaan Anda menyentuh beberapa aspek penting. Untuk memberikan jawaban yang paling akurat dan bermanfaat, bisa Anda spesifikkan sedikit? Misalnya:</p>
-            <ul>
-                <li>Apa konteks spesifik yang Anda maksud?</li>
-                <li>Apakah ini untuk keperluan akademik, kerja, atau personal?</li>
-                <li>Apakah ada aspek tertentu yang ingin Anda fokuskan?</li>
-            </ul>
-            <p>Dengan detail lebih, saya bisa memberikan jawaban yang jauh lebih tepat dan mendalam. Tapi jangan khawatir — bertanya saja dulu, nanti kita bisa mempersempit bersama!</p>`;
+    const apiMessages = [SYSTEM_MSG, ...conversationHistory.map(m => ({ role: m.role, content: m.content }))];
+    // Untuk request terakhir, gunakan format lengkap (dengan gambar jika ada)
+    apiMessages[apiMessages.length - 1] = { role: 'user', content: apiContent };
+
+    await streamAPI(apiMessages);
+}
+
+// ========== API STREAMING ==========
+async function streamAPI(messages) {
+    const controller = new AbortController();
+    currentController = controller;
+
+    let firstToken = true;
+    let fullText = '';
+    let targetEl = null;
+    let scheduled = false;
+
+    function render() {
+        if (!scheduled) {
+            scheduled = true;
+            renderRAF = requestAnimationFrame(() => {
+                if (targetEl) targetEl.innerHTML = renderMD(fullText);
+                scrollBottom();
+                scheduled = false;
+            });
+        }
+    }
+
+    // Timeout 30 detik untuk token pertama
+    const timeout = setTimeout(() => {
+        if (firstToken) controller.abort();
+    }, 30000);
+
+    try {
+        const res = await fetch('https://text.pollinations.ai/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                messages,
+                model: 'openai',
+                stream: true
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+        // Buat elemen target
+        removeTyping();
+        const msgDiv = createMsgDiv('ai');
+        targetEl = msgDiv.querySelector('.msg-content');
+        chatInner.appendChild(msgDiv);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let detectedSSE = false;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
+
+            if (!detectedSSE && buffer.length > 5) {
+                detectedSSE = buffer.trimStart().startsWith('data:');
+            }
+
+            if (detectedSSE) {
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (const line of lines) {
+                    const t = line.trim();
+                    if (!t || t === 'data: [DONE]') continue;
+                    if (t.startsWith('data: ')) {
+                        try {
+                            const j = JSON.parse(t.slice(6));
+                            const tok = j.choices?.[0]?.delta?.content || '';
+                            if (tok) { fullText += tok; render(); }
+                        } catch {}
+                    }
+                }
+            } else {
+                // Respons plain text
+                fullText += chunk;
+                render();
+            }
         }
 
-        // Kalimat pernyataan
-        if (len < 20) {
-            return `<p>Baik, saya mendengar: <strong>"${escapeHtml(text)}"</strong></p>
-            <p>Bisa Anda ceritakan lebih detail? Saya ingin memahami konteksnya agar bisa memberikan respons yang lebih bermanfaat. 😊</p>`;
+        // Sisa buffer
+        if (buffer.trim()) {
+            if (detectedSSE && buffer.trim().startsWith('data: ') && buffer.trim() !== 'data: [DONE]') {
+                try {
+                    const j = JSON.parse(buffer.trim().slice(6));
+                    fullText += j.choices?.[0]?.delta?.content || '';
+                } catch {}
+            } else if (!detectedSSE) {
+                fullText += buffer;
+            }
         }
 
-        return `<p>Terima kasih telah berbagi itu. Dari yang Anda tulis, saya melihat beberapa poin menarik:</p>
-        <p><strong>"${escapeHtml(text.substring(0, 100))}${len > 100 ? '...' : ''}"</strong></p>
-        <p>Inilah yang bisa saya tanggapi:</p>
-        <ul>
-            <li>Topik yang Anda angkat cukup relevan dan layak untuk didalami lebih lanjut</li>
-            <li>Ada beberapa sudut pandang yang bisa dieksplorasi dari pernyataan Anda</li>
-            <li>Saya bisa membantu mengembangkan ide ini lebih jauh jika Anda mau</li>
-        </ul>
-        <p>Apa yang ingin Anda lakukan selanjutnya? Saya bisa:</p>
-        <ul>
-            <li>Mengembangkan ide tersebut lebih detail</li>
-            <li>Memberikan perspektif atau counter-argument</li>
-            <li>Membantu menulisnya dalam format tertentu (artikel, presentasi, dll.)</li>
-        </ul>`;
+        // Render final
+        if (targetEl) targetEl.innerHTML = renderMD(fullText);
+        conversationHistory.push({ role: 'assistant', content: fullText });
+
+    } catch (err) {
+        clearTimeout(timeout);
+
+        if (err.name === 'AbortError') {
+            removeTyping();
+            if (fullText) {
+                if (!targetEl) {
+                    const msgDiv = createMsgDiv('ai');
+                    targetEl = msgDiv.querySelector('.msg-content');
+                    chatInner.appendChild(msgDiv);
+                }
+                targetEl.innerHTML = renderMD(fullText);
+                conversationHistory.push({ role: 'assistant', content: fullText });
+            } else {
+                const msgDiv = createMsgDiv('ai');
+                targetEl = msgDiv.querySelector('.msg-content');
+                targetEl.innerHTML = '<p><em>Dihentikan.</em></p>';
+                chatInner.appendChild(msgDiv);
+            }
+        } else {
+            // Fallback: coba non-streaming
+            removeTyping();
+            try {
+                const fb = await fetch('https://text.pollinations.ai/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages, model: 'openai' })
+                });
+                const txt = await fb.text();
+                const msgDiv = createMsgDiv('ai');
+                targetEl = msgDiv.querySelector('.msg-content');
+                targetEl.innerHTML = renderMD(txt);
+                chatInner.appendChild(msgDiv);
+                fullText = txt;
+                conversationHistory.push({ role: 'assistant', content: txt });
+            } catch {
+                // Fallback lokal
+                const lastMsg = messages[messages.length - 1];
+                const userText = typeof lastMsg.content === 'string' ? lastMsg.content : 'Pesan dengan gambar';
+                const localResp = localFallback(userText);
+                const msgDiv = createMsgDiv('ai');
+                targetEl = msgDiv.querySelector('.msg-content');
+                targetEl.innerHTML = localResp;
+                chatInner.appendChild(msgDiv);
+                showToast('Mode offline — respons lokal');
+            }
+        }
+    } finally {
+        isGenerating = false;
+        currentController = null;
+        updateBtnSend();
+        scrollBottom();
     }
+}
+
+// ========== FALLBACK LOKAL ==========
+function localFallback(text) {
+    const q = text.toLowerCase();
+    if (q.includes('halo') || q.includes('hai') || q.includes('hello'))
+        return '<p>Halo! Saat ini saya berjalan dalam mode offline. Saya masih bisa membantu dengan dasar, tetapi untuk pengalaman terbaik, pastikan koneksi internet aktif. Coba lagi nanti ya!</p>';
+    if (q.includes('gambar'))
+        return '<p>Saya melihat Anda mengunggah gambar. Untuk analisis gambar yang mendalam, saya memerlukan koneksi internet. Pastikan Anda terhubung dan coba kembali.</p>';
+    return '<p>Maaf, saya tidak dapat terhubung ke server AI saat ini. Pastikan koneksi internet Anda aktif dan coba kirim pesan lagi.</p>';
+}
+
+// ========== MARKDOWN RENDERER ==========
+function renderMD(raw) {
+    if (!raw) return '';
+    let text = raw;
+
+    // Ekstrak code blocks
+    const blocks = [];
+    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        blocks.push('<pre><code>' + escHtml(code.trim()) + '</code></pre>');
+        return '\x00B' + (blocks.length - 1) + '\x00';
+    });
+
+    // Handle code block yang belum ditutup saat streaming
+    const unclosed = (text.match(/```/g) || []).length;
+    if (unclosed % 2 !== 0) {
+        const idx = text.lastIndexOf('```');
+        const after = text.substring(idx + 3);
+        text = text.substring(0, idx) + '\x00B' + blocks.length + '\x00';
+        blocks.push('<pre><code>' + escHtml(after) + '</code></pre>');
+    }
+
+    // Escape HTML
+    text = escHtml(text);
+
+    // Inline code
+    text = text.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+    // Bold
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // Italic (hati-hati jangan konflik dengan bold)
+    text = text.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+
+    // Headers
+    text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    text = text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    // Unordered list
+    text = text.replace(/^[\-\*] (.+)$/gm, '\x01LI\x01$1\x01/LI\x01');
+    text = text.replace(/(\x01LI\x01.*?\x01\/LI\x01(\n|$)?)+/g, m => {
+        return '<ul>' + m.replace(/\x01LI\x01(.*?)\x01\/LI\x01/g, '<li>$1</li>') + '</ul>';
+    });
+
+    // Ordered list
+    text = text.replace(/^\d+\. (.+)$/gm, '\x01OLI\x01$1\x01/OLI\x01');
+    text = text.replace(/(\x01OLI\x01.*?\x01\/OLI\x01(\n|$)?)+/g, m => {
+        return '<ol>' + m.replace(/\x01OLI\x01(.*?)\x01\/OLI\x01/g, '<li>$1</li>') + '</ol>';
+    });
+
+    // Paragraf & line break
+    text = text.replace(/\n{2,}/g, '</p><p>');
+    text = text.replace(/\n/g, '<br>');
+
+    // Restore code blocks
+    blocks.forEach((b, i) => { text = text.replace('\x00B' + i + '\x00', b); });
+
+    return '<p>' + text + '</p>';
+}
+
+function escHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ========== UI HELPERS ==========
+function addMessage(role, text, images = []) {
+    const div = createMsgDiv(role);
+    const content = div.querySelector('.msg-content');
+
+    if (images.length) {
+        images.forEach(img => {
+            content.innerHTML += `<img class="msg-img" src="${img.dataUrl}" alt="Gambar">`;
+        });
+    }
+    if (text) content.innerHTML += '<p>' + escHtml(text) + '</p>';
+
+    chatInner.appendChild(div);
+    scrollBottom();
+}
+
+function createMsgDiv(role) {
+    const div = document.createElement('div');
+    div.className = 'message';
+    const isUser = role === 'user';
+    div.innerHTML = `
+        <div class="msg-av ${isUser ? 'u' : 'a'}">${isUser ? 'K' : 'L'}</div>
+        <div class="msg-body">
+            <div class="msg-name">${isUser ? 'Kamu' : 'LEO AI'}</div>
+            <div class="msg-content"></div>
+        </div>`;
+    return div;
+}
+
+function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'message';
+    div.id = 'typingMsg';
+    div.innerHTML = `
+        <div class="msg-av a">L</div>
+        <div class="msg-body">
+            <div class="msg-name">LEO AI</div>
+            <div class="msg-content"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+        </div>`;
+    chatInner.appendChild(div);
+    scrollBottom();
+}
+
+function removeTyping() {
+    const el = document.getElementById('typingMsg');
+    if (el) el.remove();
+}
+
+function scrollBottom() {
+    requestAnimationFrame(() => { chatContainer.scrollTop = chatContainer.scrollHeight; });
+}
+
+function updateBtnStop() {
+    btnSend.innerHTML = '<i class="fa-solid fa-stop"></i>';
+    btnSend.classList.add('active', 'stop');
+}
+
+function updateBtnSend() {
+    btnSend.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+    btnSend.classList.remove('stop');
+    toggleSend();
+}
+
+function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 2500);
+}
 </script>
 
 </body>

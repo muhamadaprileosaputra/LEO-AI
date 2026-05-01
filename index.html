@@ -10,18 +10,16 @@
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         :root{
             --bg:#fff;--fg:#1a1a2e;--muted:#8e8ea0;--accent:#10a37f;
-            --accent-h:#0d8c6d;--border:#e5e5e5;--card:#f7f7f8;--radius:22px;
+            --accent-h:#0d8c6d;--border:#e5e5e5;--card:#f7f7f8;
         }
         body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--fg);height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
-        /* Header */
         header{display:flex;align-items:center;justify-content:center;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg);z-index:10;flex-shrink:0}
         .logo{display:flex;align-items:center;gap:10px}
         .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#34d399);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;box-shadow:0 2px 10px rgba(16,163,127,.3)}
         .logo-text{font-size:18px;font-weight:700;letter-spacing:-.5px}
         .logo-text span{color:var(--accent)}
 
-        /* Chat */
         .chat-container{flex:1;overflow-y:auto;scroll-behavior:smooth}
         .chat-container::-webkit-scrollbar{width:5px}
         .chat-container::-webkit-scrollbar-track{background:transparent}
@@ -31,51 +29,71 @@
         /* Welcome */
         .welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:58vh;text-align:center;padding:40px 20px;animation:fadeUp .5s ease}
         @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-        .welcome-icon{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),#34d399);border-radius:20px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:800;margin-bottom:20px;box-shadow:0 8px 28px rgba(16,163,127,.22)}
-        .welcome h1{font-size:26px;font-weight:700;margin-bottom:6px;letter-spacing:-.4px}
+        .welcome-icon{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),#34d399);border-radius:20px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:800;margin-bottom:20px;box-shadow:0 8px 28px rgba(16,163,127,.22);animation:pulse-glow 3s ease-in-out infinite}
+        @keyframes pulse-glow{0%,100%{box-shadow:0 8px 28px rgba(16,163,127,.22)}50%{box-shadow:0 8px 40px rgba(16,163,127,.38)}}
+        .welcome h1{font-size:26px;font-weight:700;margin-bottom:6px}
         .welcome p{color:var(--muted);font-size:14.5px;max-width:400px;line-height:1.6}
         .suggestions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:28px;width:100%;max-width:520px}
-        .sug-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;transition:all .18s;font-size:13px;color:var(--fg);line-height:1.5}
-        .sug-card:hover{background:#efefef;border-color:#ccc;transform:translateY(-1px)}
+        .sug-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;transition:all .2s;font-size:13px;color:var(--fg);line-height:1.5;opacity:0;animation:cardIn .4s ease forwards}
+        .sug-card:nth-child(1){animation-delay:.1s}
+        .sug-card:nth-child(2){animation-delay:.18s}
+        .sug-card:nth-child(3){animation-delay:.26s}
+        .sug-card:nth-child(4){animation-delay:.34s}
+        @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .sug-card:hover{background:#efefef;border-color:#ccc;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
         .sug-card i{font-size:16px;margin-bottom:6px;display:block;color:var(--accent)}
 
         /* Messages */
-        .message{display:flex;gap:14px;padding:18px 0;animation:msgIn .3s ease}
-        @keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .message{display:flex;gap:14px;padding:18px 0;animation:msgSlideIn .4s cubic-bezier(.22,1,.36,1)}
+        @keyframes msgSlideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
         .message+.message{border-top:1px solid var(--border)}
         .msg-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;margin-top:2px}
         .msg-av.u{background:#e8e8ed;color:#555}
         .msg-av.a{background:linear-gradient(135deg,var(--accent),#34d399);color:#fff;font-size:10px;font-weight:800}
         .msg-body{flex:1;min-width:0}
         .msg-name{font-weight:600;font-size:13.5px;margin-bottom:5px}
-        .msg-content{font-size:14.5px;line-height:1.75;color:#333;word-break:break-word}
+        .msg-content{font-size:14.5px;line-height:1.75;color:#333;word-break:break-word;position:relative}
+
+        /* Markdown */
         .msg-content p{margin-bottom:8px}.msg-content p:last-child{margin-bottom:0}
         .msg-content strong{font-weight:600;color:var(--fg)}
         .msg-content em{font-style:italic}
         .msg-content code{background:#f1f1f3;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'SF Mono','Fira Code',monospace;color:#c7254e}
-        .msg-content pre{background:#1a1a2e;color:#e0e0e0;padding:14px 16px;border-radius:12px;overflow-x:auto;margin:8px 0;font-size:12.5px;line-height:1.65;font-family:'SF Mono','Fira Code',monospace}
+        .msg-content pre{background:#1a1a2e;color:#e0e0e0;padding:14px 16px;border-radius:12px;overflow-x:auto;margin:8px 0;font-size:12.5px;line-height:1.65;font-family:'SF Mono','Fira Code',monospace;animation:codeIn .3s ease}
+        @keyframes codeIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
         .msg-content pre code{background:none;padding:0;color:inherit;font-size:inherit}
         .msg-content ul,.msg-content ol{padding-left:20px;margin:6px 0}
         .msg-content li{margin-bottom:4px;line-height:1.65}
-        .msg-content h1,.msg-content h2,.msg-content h3{font-weight:700;margin:12px 0 4px;color:var(--fg)}
+        .msg-content li{animation:liIn .25s ease both}
+        @keyframes liIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+        .msg-content h1,.msg-content h2,.msg-content h3{font-weight:700;margin:14px 0 5px;color:var(--fg);animation:headIn .3s ease}
+        @keyframes headIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
         .msg-content h1{font-size:20px}.msg-content h2{font-size:17px}.msg-content h3{font-size:15px}
-        .msg-img{max-width:320px;max-height:240px;border-radius:10px;margin-bottom:8px;object-fit:cover;border:1px solid var(--border)}
+        .msg-img{max-width:320px;max-height:240px;border-radius:10px;margin-bottom:8px;object-fit:cover;border:1px solid var(--border);animation:imgIn .4s ease}
+        @keyframes imgIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 
-        /* Typing */
-        .typing-dots{display:inline-flex;gap:4px;align-items:center;padding:4px 0}
-        .typing-dots span{width:6px;height:6px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite}
-        .typing-dots span:nth-child(2){animation-delay:.15s}
-        .typing-dots span:nth-child(3){animation-delay:.3s}
-        @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-5px);opacity:1}}
+        /* Typing cursor — kunci ke-mulusan */
+        .typing-cursor{display:inline-block;width:2.5px;height:1.15em;background:var(--accent);border-radius:2px;margin-left:2px;vertical-align:text-bottom;animation:cursorBlink .8s ease-in-out infinite}
+        @keyframes cursorBlink{0%,45%{opacity:1}50%,95%{opacity:0}100%{opacity:1}}
+        .typing-cursor.hide{animation:cursorFadeOut .3s ease forwards}
+        @keyframes cursorFadeOut{to{opacity:0;width:0;margin:0}}
+
+        /* Typing dots */
+        .typing-dots{display:inline-flex;gap:5px;align-items:center;padding:4px 0}
+        .typing-dots span{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:dotWave 1.4s ease-in-out infinite}
+        .typing-dots span:nth-child(2){animation-delay:.2s}
+        .typing-dots span:nth-child(3){animation-delay:.4s}
+        @keyframes dotWave{0%,80%,100%{transform:scale(.6);opacity:.3}40%{transform:scale(1);opacity:1}}
 
         /* Input */
         .input-area{padding:0 20px 16px;background:var(--bg);flex-shrink:0}
         .input-wrapper{max-width:768px;margin:0 auto;position:relative}
-        .input-preview{display:none;padding:6px 0 4px}.input-preview.active{display:block}
-        .preview-item{position:relative;display:inline-block;margin-right:6px}
+        .input-preview{display:none;padding:6px 0 4px}.input-preview.active{display:flex;flex-wrap:wrap;gap:6px}
+        .preview-item{position:relative;display:inline-block;animation:prevIn .25s ease}
+        @keyframes prevIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
         .preview-item img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
-        .preview-rm{position:absolute;top:-5px;right:-5px;width:20px;height:20px;background:#333;color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
-        .preview-rm:hover{background:#e53935}
+        .preview-rm{position:absolute;top:-5px;right:-5px;width:20px;height:20px;background:#333;color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+        .preview-rm:hover{background:#ef4444;transform:scale(1.1)}
         .input-box{display:flex;align-items:flex-end;background:var(--card);border:1.5px solid var(--border);border-radius:24px;padding:6px 6px 6px 16px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.03)}
         .input-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(16,163,127,.08),0 2px 8px rgba(0,0,0,.03)}
         #chatInput{flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:14.5px;resize:none;max-height:150px;min-height:24px;line-height:1.5;padding:5px 0;color:var(--fg)}
@@ -83,31 +101,35 @@
         .input-actions{display:flex;align-items:center;gap:3px;flex-shrink:0}
         .btn-icon{width:36px;height:36px;border:none;border-radius:50%;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
         .btn-icon:hover{background:#e5e5e5;color:var(--fg)}
-        .btn-send{width:36px;height:36px;border:none;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;opacity:.35;pointer-events:none}
+        .btn-send{width:36px;height:36px;border:none;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s cubic-bezier(.22,1,.36,1);opacity:.35;pointer-events:none}
         .btn-send.active{opacity:1;pointer-events:auto}
-        .btn-send.active:hover{background:var(--accent-h);transform:scale(1.06)}
-        .btn-send.stop{background:#ef4444;opacity:1;pointer-events:auto}
-        .btn-send.stop:hover{background:#dc2626}
+        .btn-send.active:hover{background:var(--accent-h);transform:scale(1.08)}
+        .btn-send.stop{background:#ef4444;opacity:1;pointer-events:auto;animation:stopPulse 1.5s ease-in-out infinite}
+        @keyframes stopPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+        .btn-send.stop:hover{background:#dc2626;transform:scale(1.08)}
         .footer-note{text-align:center;font-size:11.5px;color:#c0c0c0;margin-top:8px}
 
-        /* Drag overlay */
-        .drag-ov{display:none;position:fixed;inset:0;background:rgba(255,255,255,.93);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:10px;backdrop-filter:blur(6px)}
+        /* Drag */
+        .drag-ov{display:none;position:fixed;inset:0;background:rgba(255,255,255,.93);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:10px;backdrop-filter:blur(6px);animation:dragIn .2s ease}
         .drag-ov.active{display:flex}
-        .drag-ov i{font-size:44px;color:var(--accent)}
+        @keyframes dragIn{from{opacity:0}to{opacity:1}}
+        .drag-ov i{font-size:44px;color:var(--accent);animation:dragBounce 1s ease-in-out infinite}
+        @keyframes dragBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
         .drag-ov p{font-size:16px;font-weight:600;color:var(--fg)}
 
         /* Toast */
-        .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);background:#333;color:#fff;padding:9px 20px;border-radius:10px;font-size:13px;z-index:200;transition:transform .3s ease;box-shadow:0 4px 16px rgba(0,0,0,.15);pointer-events:none}
+        .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);background:#1a1a2e;color:#fff;padding:10px 22px;border-radius:12px;font-size:13px;z-index:200;transition:transform .35s cubic-bezier(.22,1,.36,1);box-shadow:0 6px 24px rgba(0,0,0,.18);pointer-events:none}
         .toast.show{transform:translateX(-50%) translateY(0)}
-
-        /* Error msg style */
-        .msg-error{color:#b91c1c;font-style:italic}
 
         @media(max-width:600px){
             .suggestions{grid-template-columns:1fr}
             .welcome h1{font-size:21px}
             .welcome-icon{width:52px;height:52px;font-size:22px;border-radius:15px}
             .msg-img{max-width:220px;max-height:180px}
+        }
+
+        @media(prefers-reduced-motion:reduce){
+            *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
         }
     </style>
 </head>
@@ -127,31 +149,16 @@
             <h1>Halo, ada yang bisa saya bantu?</h1>
             <p>Saya LEO AI, asisten cerdas Anda. Tanyakan apa saja atau unggah gambar untuk dianalisis.</p>
             <div class="suggestions">
-                <div class="sug-card" onclick="useSug(this)">
-                    <i class="fa-solid fa-lightbulb"></i>
-                    Jelaskan konsep quantum computing dengan sederhana
-                </div>
-                <div class="sug-card" onclick="useSug(this)">
-                    <i class="fa-solid fa-code"></i>
-                    Buatkan fungsi JavaScript untuk validasi email
-                </div>
-                <div class="sug-card" onclick="useSug(this)">
-                    <i class="fa-solid fa-pen-fancy"></i>
-                    Tuliskan paragraf persuasif untuk produk skincare
-                </div>
-                <div class="sug-card" onclick="useSug(this)">
-                    <i class="fa-solid fa-image"></i>
-                    Unggah gambar lalu saya akan menganalisisnya
-                </div>
+                <div class="sug-card" onclick="useSug(this)"><i class="fa-solid fa-lightbulb"></i>Jelaskan konsep quantum computing dengan sederhana</div>
+                <div class="sug-card" onclick="useSug(this)"><i class="fa-solid fa-code"></i>Buatkan fungsi JavaScript untuk validasi email</div>
+                <div class="sug-card" onclick="useSug(this)"><i class="fa-solid fa-pen-fancy"></i>Tuliskan paragraf persuasif untuk produk skincare</div>
+                <div class="sug-card" onclick="useSug(this)"><i class="fa-solid fa-image"></i>Unggah gambar lalu saya akan menganalisisnya</div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="drag-ov" id="dragOv">
-    <i class="fa-solid fa-cloud-arrow-up"></i>
-    <p>Lepaskan gambar di sini</p>
-</div>
+<div class="drag-ov" id="dragOv"><i class="fa-solid fa-cloud-arrow-up"></i><p>Lepaskan gambar di sini</p></div>
 <div class="toast" id="toast"></div>
 
 <div class="input-area">
@@ -160,12 +167,8 @@
         <div class="input-box">
             <textarea id="chatInput" rows="1" placeholder="Ketik pesan Anda..." aria-label="Pesan"></textarea>
             <div class="input-actions">
-                <button class="btn-icon" id="btnUpload" title="Unggah gambar" aria-label="Unggah gambar">
-                    <i class="fa-solid fa-paperclip"></i>
-                </button>
-                <button class="btn-send" id="btnSend" title="Kirim" aria-label="Kirim">
-                    <i class="fa-solid fa-arrow-up"></i>
-                </button>
+                <button class="btn-icon" id="btnUpload" title="Unggah gambar" aria-label="Unggah gambar"><i class="fa-solid fa-paperclip"></i></button>
+                <button class="btn-send" id="btnSend" title="Kirim" aria-label="Kirim"><i class="fa-solid fa-arrow-up"></i></button>
             </div>
         </div>
         <input type="file" id="fileInput" accept="image/*" multiple hidden>
@@ -174,7 +177,7 @@
 </div>
 
 <script>
-// ========== DOM ==========
+// ===== DOM =====
 const chatContainer = document.getElementById('chatContainer');
 const chatInner = document.getElementById('chatInner');
 const welcomeScreen = document.getElementById('welcomeScreen');
@@ -186,12 +189,13 @@ const inputPreview = document.getElementById('inputPreview');
 const dragOv = document.getElementById('dragOv');
 const toastEl = document.getElementById('toast');
 
-// ========== STATE ==========
+// ===== STATE =====
 let pendingImages = [];
 let isGenerating = false;
 let currentController = null;
 let conversationHistory = [];
-let renderRAF = null;
+let userScrolledUp = false;
+let lastScrollTop = 0;
 
 const SYSTEM_MSG = {
     role: 'system',
@@ -206,7 +210,22 @@ Karakteristik jawabanmu:
 - Gunakan bahasa yang hangat tapi profesional`
 };
 
-// ========== TEXTAREA ==========
+// ===== DETEKSI USER SCROLL =====
+chatContainer.addEventListener('scroll', () => {
+    const st = chatContainer.scrollTop;
+    const threshold = 120;
+    const atBottom = (chatContainer.scrollHeight - st - chatContainer.clientHeight) < threshold;
+    userScrolledUp = !atBottom;
+    lastScrollTop = st;
+}, { passive: true });
+
+function smartScroll() {
+    if (!userScrolledUp) {
+        chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+    }
+}
+
+// ===== TEXTAREA =====
 chatInput.addEventListener('input', () => {
     chatInput.style.height = 'auto';
     chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
@@ -215,12 +234,10 @@ chatInput.addEventListener('input', () => {
 
 function toggleSend() {
     const has = chatInput.value.trim().length > 0 || pendingImages.length > 0;
-    if (!isGenerating) {
-        btnSend.classList.toggle('active', has);
-    }
+    if (!isGenerating) btnSend.classList.toggle('active', has);
 }
 
-// ========== FILE UPLOAD ==========
+// ===== FILE UPLOAD =====
 btnUpload.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
 
@@ -252,14 +269,14 @@ function renderPreviews() {
 
 function rmPreview(i) { pendingImages.splice(i, 1); renderPreviews(); toggleSend(); }
 
-// ========== DRAG & DROP ==========
+// ===== DRAG & DROP =====
 let dragN = 0;
 document.addEventListener('dragenter', e => { e.preventDefault(); dragN++; dragOv.classList.add('active'); });
 document.addEventListener('dragleave', e => { e.preventDefault(); dragN--; if (dragN <= 0) { dragN = 0; dragOv.classList.remove('active'); } });
 document.addEventListener('dragover', e => e.preventDefault());
 document.addEventListener('drop', e => { e.preventDefault(); dragN = 0; dragOv.classList.remove('active'); handleFiles(e.dataTransfer.files); });
 
-// ========== KOMPRESI GAMBAR ==========
+// ===== KOMPRESI GAMBAR =====
 function compressImage(dataUrl, maxW = 1024) {
     return new Promise(resolve => {
         const img = new Image();
@@ -276,7 +293,7 @@ function compressImage(dataUrl, maxW = 1024) {
     });
 }
 
-// ========== KIRIM PESAN ==========
+// ===== KIRIM PESAN =====
 chatInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -301,6 +318,7 @@ async function sendMessage() {
     if (!text && !pendingImages.length) return;
 
     if (welcomeScreen) welcomeScreen.style.display = 'none';
+    userScrolledUp = false;
 
     const images = [...pendingImages];
     pendingImages = [];
@@ -311,98 +329,92 @@ async function sendMessage() {
     chatInput.style.height = 'auto';
     toggleSend();
 
-    // Kompres gambar untuk API
+    // Kompres gambar
     const compressed = [];
     for (const img of images) {
         try { compressed.push({ ...img, dataUrl: await compressImage(img.dataUrl) }); }
         catch { compressed.push(img); }
     }
 
-    // Bangun konten pesan untuk API
+    // Bangun konten API
     let apiContent;
     if (compressed.length > 0) {
         const parts = [];
-        if (text) parts.push({ type: 'text', text: text });
-        for (const img of compressed) {
-            parts.push({ type: 'image_url', image_url: { url: img.dataUrl } });
-        }
+        if (text) parts.push({ type: 'text', text });
+        for (const img of compressed) parts.push({ type: 'image_url', image_url: { url: img.dataUrl } });
         apiContent = parts;
     } else {
         apiContent = text;
     }
 
-    // Simpan ke history (tanpa base64 besar)
+    // History (tanpa base64 besar)
     if (compressed.length > 0) {
-        const imgDesc = compressed.map(im => `[Gambar: ${im.file.name}, ${im.file.type}, ${(im.file.size/1024).toFixed(0)}KB]`).join('\n');
-        conversationHistory.push({ role: 'user', content: imgDesc + (text ? '\n' + text : '\nAnalisis gambar ini.') });
+        const desc = compressed.map(im => `[Gambar: ${im.file.name}, ${(im.file.size/1024).toFixed(0)}KB]`).join('\n');
+        conversationHistory.push({ role: 'user', content: desc + (text ? '\n' + text : '\nAnalisis gambar ini.') });
     } else {
         conversationHistory.push({ role: 'user', content: text });
     }
+    if (conversationHistory.length > 24) conversationHistory = conversationHistory.slice(-24);
 
-    // Batasi history
-    if (conversationHistory.length > 24) {
-        conversationHistory = conversationHistory.slice(-24);
-    }
-
-    // Mulai generate
     isGenerating = true;
     updateBtnStop();
     showTyping();
 
     const apiMessages = [SYSTEM_MSG, ...conversationHistory.map(m => ({ role: m.role, content: m.content }))];
-    // Untuk request terakhir, gunakan format lengkap (dengan gambar jika ada)
     apiMessages[apiMessages.length - 1] = { role: 'user', content: apiContent };
 
     await streamAPI(apiMessages);
 }
 
-// ========== API STREAMING ==========
+// ===== STREAMING DENGAN ANIMASI MULUS =====
 async function streamAPI(messages) {
     const controller = new AbortController();
     currentController = controller;
 
-    let firstToken = true;
     let fullText = '';
     let targetEl = null;
-    let scheduled = false;
+    let cursorEl = null;
+    let renderPending = false;
+    let lastRenderedLen = -1;
 
-    function render() {
-        if (!scheduled) {
-            scheduled = true;
-            renderRAF = requestAnimationFrame(() => {
-                if (targetEl) targetEl.innerHTML = renderMD(fullText);
-                scrollBottom();
-                scheduled = false;
+    // Throttle render — hanya sekali per frame, tapi tetap responsif
+    function scheduleRender() {
+        if (!renderPending) {
+            renderPending = true;
+            requestAnimationFrame(() => {
+                renderPending = false;
+                // Hanya render kalau ada perubahan
+                if (fullText.length !== lastRenderedLen && targetEl) {
+                    lastRenderedLen = fullText.length;
+                    targetEl.innerHTML = renderMD(fullText);
+                    if (cursorEl) targetEl.appendChild(cursorEl);
+                    smartScroll();
+                }
             });
         }
     }
 
-    // Timeout 30 detik untuk token pertama
-    const timeout = setTimeout(() => {
-        if (firstToken) controller.abort();
-    }, 30000);
+    const timeout = setTimeout(() => { if (!fullText) controller.abort(); }, 30000);
 
     try {
         const res = await fetch('https://text.pollinations.ai/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                messages,
-                model: 'openai',
-                stream: true
-            }),
+            body: JSON.stringify({ messages, model: 'openai', stream: true }),
             signal: controller.signal
         });
-
         clearTimeout(timeout);
 
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
-        // Buat elemen target
+        // Siapkan elemen target + cursor
         removeTyping();
         const msgDiv = createMsgDiv('ai');
         targetEl = msgDiv.querySelector('.msg-content');
+        cursorEl = document.createElement('span');
+        cursorEl.className = 'typing-cursor';
         chatInner.appendChild(msgDiv);
+        smartScroll();
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -430,31 +442,34 @@ async function streamAPI(messages) {
                         try {
                             const j = JSON.parse(t.slice(6));
                             const tok = j.choices?.[0]?.delta?.content || '';
-                            if (tok) { fullText += tok; render(); }
+                            if (tok) { fullText += tok; scheduleRender(); }
                         } catch {}
                     }
                 }
             } else {
-                // Respons plain text
                 fullText += chunk;
-                render();
+                scheduleRender();
             }
         }
 
         // Sisa buffer
         if (buffer.trim()) {
             if (detectedSSE && buffer.trim().startsWith('data: ') && buffer.trim() !== 'data: [DONE]') {
-                try {
-                    const j = JSON.parse(buffer.trim().slice(6));
-                    fullText += j.choices?.[0]?.delta?.content || '';
-                } catch {}
+                try { const j = JSON.parse(buffer.trim().slice(6)); fullText += j.choices?.[0]?.delta?.content || ''; } catch {}
             } else if (!detectedSSE) {
                 fullText += buffer;
             }
         }
 
-        // Render final
-        if (targetEl) targetEl.innerHTML = renderMD(fullText);
+        // Render final + animasi cursor hilang
+        if (targetEl) {
+            targetEl.innerHTML = renderMD(fullText);
+            // Animasi cursor fade out yang mulus
+            const finalCursor = document.createElement('span');
+            finalCursor.className = 'typing-cursor hide';
+            targetEl.appendChild(finalCursor);
+            setTimeout(() => finalCursor.remove(), 350);
+        }
         conversationHistory.push({ role: 'assistant', content: fullText });
 
     } catch (err) {
@@ -469,15 +484,17 @@ async function streamAPI(messages) {
                     chatInner.appendChild(msgDiv);
                 }
                 targetEl.innerHTML = renderMD(fullText);
+                const fc = document.createElement('span');
+                fc.className = 'typing-cursor hide';
+                targetEl.appendChild(fc);
+                setTimeout(() => fc.remove(), 350);
                 conversationHistory.push({ role: 'assistant', content: fullText });
             } else {
                 const msgDiv = createMsgDiv('ai');
-                targetEl = msgDiv.querySelector('.msg-content');
-                targetEl.innerHTML = '<p><em>Dihentikan.</em></p>';
+                msgDiv.querySelector('.msg-content').innerHTML = '<p><em>Dihentikan.</em></p>';
                 chatInner.appendChild(msgDiv);
             }
         } else {
-            // Fallback: coba non-streaming
             removeTyping();
             try {
                 const fb = await fetch('https://text.pollinations.ai/', {
@@ -488,19 +505,19 @@ async function streamAPI(messages) {
                 const txt = await fb.text();
                 const msgDiv = createMsgDiv('ai');
                 targetEl = msgDiv.querySelector('.msg-content');
-                targetEl.innerHTML = renderMD(txt);
                 chatInner.appendChild(msgDiv);
+                // Animasi ketik ulang untuk fallback
+                await smoothTypeIn(targetEl, txt);
                 fullText = txt;
                 conversationHistory.push({ role: 'assistant', content: txt });
             } catch {
-                // Fallback lokal
                 const lastMsg = messages[messages.length - 1];
                 const userText = typeof lastMsg.content === 'string' ? lastMsg.content : 'Pesan dengan gambar';
                 const localResp = localFallback(userText);
                 const msgDiv = createMsgDiv('ai');
                 targetEl = msgDiv.querySelector('.msg-content');
-                targetEl.innerHTML = localResp;
                 chatInner.appendChild(msgDiv);
+                await smoothTypeIn(targetEl, localResp);
                 showToast('Mode offline — respons lokal');
             }
         }
@@ -508,21 +525,56 @@ async function streamAPI(messages) {
         isGenerating = false;
         currentController = null;
         updateBtnSend();
-        scrollBottom();
+        smartScroll();
     }
 }
 
-// ========== FALLBACK LOKAL ==========
+// ===== ANIMASI KETIK MULUS UNTUK FALLBACK =====
+function smoothTypeIn(el, html) {
+    return new Promise(resolve => {
+        let i = 0;
+        const speed = 6;
+        let buf = '';
+        const cursor = document.createElement('span');
+        cursor.className = 'typing-cursor';
+
+        function step() {
+            if (i < html.length) {
+                buf += html[i];
+                i++;
+                // Jangan potong di tengah tag
+                if (buf.lastIndexOf('<') > buf.lastIndexOf('>')) {
+                    while (i < html.length && buf.lastIndexOf('<') > buf.lastIndexOf('>')) {
+                        buf += html[i]; i++;
+                    }
+                }
+                el.innerHTML = buf;
+                el.appendChild(cursor);
+                smartScroll();
+                setTimeout(step, speed);
+            } else {
+                el.innerHTML = html;
+                cursor.className = 'typing-cursor hide';
+                el.appendChild(cursor);
+                setTimeout(() => cursor.remove(), 350);
+                resolve();
+            }
+        }
+        step();
+    });
+}
+
+// ===== FALLBACK LOKAL =====
 function localFallback(text) {
     const q = text.toLowerCase();
     if (q.includes('halo') || q.includes('hai') || q.includes('hello'))
-        return '<p>Halo! Saat ini saya berjalan dalam mode offline. Saya masih bisa membantu dengan dasar, tetapi untuk pengalaman terbaik, pastikan koneksi internet aktif. Coba lagi nanti ya!</p>';
+        return '<p>Halo! Saat ini saya berjalan dalam mode offline. Pastikan koneksi internet aktif dan coba lagi ya!</p>';
     if (q.includes('gambar'))
-        return '<p>Saya melihat Anda mengunggah gambar. Untuk analisis gambar yang mendalam, saya memerlukan koneksi internet. Pastikan Anda terhubung dan coba kembali.</p>';
-    return '<p>Maaf, saya tidak dapat terhubung ke server AI saat ini. Pastikan koneksi internet Anda aktif dan coba kirim pesan lagi.</p>';
+        return '<p>Saya melihat Anda mengunggah gambar. Untuk analisis gambar yang mendalam, saya memerlukan koneksi internet. Coba lagi nanti.</p>';
+    return '<p>Maaf, tidak dapat terhubung ke server AI saat ini. Pastikan koneksi internet aktif dan coba kirim pesan lagi.</p>';
 }
 
-// ========== MARKDOWN RENDERER ==========
+// ===== MARKDOWN RENDERER =====
 function renderMD(raw) {
     if (!raw) return '';
     let text = raw;
@@ -534,7 +586,7 @@ function renderMD(raw) {
         return '\x00B' + (blocks.length - 1) + '\x00';
     });
 
-    // Handle code block yang belum ditutup saat streaming
+    // Handle code block belum ditutup saat streaming
     const unclosed = (text.match(/```/g) || []).length;
     if (unclosed % 2 !== 0) {
         const idx = text.lastIndexOf('```');
@@ -543,7 +595,6 @@ function renderMD(raw) {
         blocks.push('<pre><code>' + escHtml(after) + '</code></pre>');
     }
 
-    // Escape HTML
     text = escHtml(text);
 
     // Inline code
@@ -552,7 +603,7 @@ function renderMD(raw) {
     // Bold
     text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-    // Italic (hati-hati jangan konflik dengan bold)
+    // Italic
     text = text.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
 
     // Headers
@@ -572,7 +623,7 @@ function renderMD(raw) {
         return '<ol>' + m.replace(/\x01OLI\x01(.*?)\x01\/OLI\x01/g, '<li>$1</li>') + '</ol>';
     });
 
-    // Paragraf & line break
+    // Paragraf
     text = text.replace(/\n{2,}/g, '</p><p>');
     text = text.replace(/\n/g, '<br>');
 
@@ -586,20 +637,14 @@ function escHtml(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// ========== UI HELPERS ==========
+// ===== UI HELPERS =====
 function addMessage(role, text, images = []) {
     const div = createMsgDiv(role);
     const content = div.querySelector('.msg-content');
-
-    if (images.length) {
-        images.forEach(img => {
-            content.innerHTML += `<img class="msg-img" src="${img.dataUrl}" alt="Gambar">`;
-        });
-    }
+    if (images.length) images.forEach(img => { content.innerHTML += `<img class="msg-img" src="${img.dataUrl}" alt="Gambar">`; });
     if (text) content.innerHTML += '<p>' + escHtml(text) + '</p>';
-
     chatInner.appendChild(div);
-    scrollBottom();
+    smartScroll();
 }
 
 function createMsgDiv(role) {
@@ -626,17 +671,10 @@ function showTyping() {
             <div class="msg-content"><div class="typing-dots"><span></span><span></span><span></span></div></div>
         </div>`;
     chatInner.appendChild(div);
-    scrollBottom();
+    smartScroll();
 }
 
-function removeTyping() {
-    const el = document.getElementById('typingMsg');
-    if (el) el.remove();
-}
-
-function scrollBottom() {
-    requestAnimationFrame(() => { chatContainer.scrollTop = chatContainer.scrollHeight; });
-}
+function removeTyping() { const el = document.getElementById('typingMsg'); if (el) el.remove(); }
 
 function updateBtnStop() {
     btnSend.innerHTML = '<i class="fa-solid fa-stop"></i>';

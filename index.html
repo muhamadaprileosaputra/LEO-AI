@@ -4,672 +4,1476 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEO AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Söhne:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         :root {
-            --bg:#fff;--bg2:#f7f7f8;--bg3:#f0f0f0;--bg-hover:#ececec;--bg-active:#e3e3e3;
-            --border:#e5e5e5;--fg:#1a1a1a;--fg2:#6e6e6e;--fg3:#999;
-            --accent:#10a37f;--accent2:#0d8c6d;--code-bg:#1e1e1e;
-            --sidebar-w:260px;
-            --shadow:0 2px 8px rgba(0,0,0,.08);
+            --bg: #ffffff;
+            --fg: #1a1a2e;
+            --muted: #8e8ea0;
+            --accent: #10a37f;
+            --accent-hover: #0d8c6d;
+            --border: #e5e5e5;
+            --card: #f7f7f8;
+            --user-bubble: #f7f7f8;
+            --ai-bubble: #ffffff;
+            --shadow: 0 2px 12px rgba(0,0,0,0.06);
+            --radius: 20px;
         }
-        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Söhne',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--fg);height:100vh;overflow:hidden;display:flex}
 
-        /* ===== SIDEBAR ===== */
-        .sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s}
-        .sidebar.collapsed{transform:translateX(calc(-1*var(--sidebar-w)));opacity:0;position:absolute;height:100%}
-        .sb-head{padding:12px}
-        .new-chat{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--fg);font-size:14px;font-weight:500;cursor:pointer;transition:background .15s;font-family:inherit;width:100%}
-        .new-chat:hover{background:var(--bg-hover)}
-        .sb-search{padding:0 12px 8px}
-        .sb-search input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--fg);outline:none;font-family:inherit;transition:border-color .2s}
-        .sb-search input:focus{border-color:var(--accent)}
-        .sb-list{flex:1;overflow-y:auto;padding:4px 8px;scrollbar-width:thin;scrollbar-color:#ccc transparent}
-        .sb-list::-webkit-scrollbar{width:4px}
-        .sb-list::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
-        .sb-label{padding:8px 10px 4px;font-size:11px;font-weight:600;color:var(--fg3);text-transform:uppercase;letter-spacing:.5px}
-        .sb-item{display:flex;align-items:center;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--fg);transition:background .12s;gap:8px}
-        .sb-item:hover{background:var(--bg-hover)}
-        .sb-item.active{background:var(--bg-active)}
-        .sb-item .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .sb-item .a{display:none;gap:2px}
-        .sb-item:hover .a{display:flex}
-        .sb-item .a button{background:none;border:none;color:var(--fg2);cursor:pointer;padding:2px 5px;border-radius:4px;font-size:12px}
-        .sb-item .a button:hover{color:var(--fg);background:rgba(0,0,0,.05)}
-        .sb-foot{padding:12px;border-top:1px solid var(--border)}
-        .sb-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s}
-        .sb-user:hover{background:var(--bg-hover)}
-        .avatar-sm{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5b5b5b,#3a3a3a);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;flex-shrink:0}
-        .avatar-ai{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#10a37f,#0d8c6d);display:flex;align-items:center;justify-content:center}
-        .avatar-ai svg{width:16px;height:16px}
-
-        /* ===== MAIN ===== */
-        .main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
-        .top-bar{display:flex;align-items:center;padding:10px 16px;gap:8px;flex-shrink:0}
-        .tb-btn{background:none;border:none;color:var(--fg2);cursor:pointer;padding:6px 8px;border-radius:6px;font-size:18px;transition:all .15s;display:flex;align-items:center}
-        .tb-btn:hover{background:var(--bg-hover);color:var(--fg)}
-        .model-label{font-size:15px;font-weight:600;cursor:default;user-select:none}
-        .spacer{flex:1}
-
-        /* ===== VIEW SYSTEM: chat dan settings bergantian ===== */
-        .view{flex:1;display:flex;flex-direction:column;min-height:0}
-        .view.hidden{display:none}
-
-        /* ===== SETTINGS VIEW (di dalam main, bukan overlay) ===== */
-        .settings-view{
-            flex:1;overflow-y:auto;background:var(--bg);
-            scrollbar-width:thin;scrollbar-color:#ddd transparent;
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        .settings-view::-webkit-scrollbar{width:5px}
-        .settings-view::-webkit-scrollbar-thumb{background:#ddd;border-radius:5px}
 
-        .set-head{
-            display:flex;align-items:center;gap:10px;padding:14px 24px;
-            border-bottom:1px solid var(--border);flex-shrink:0;
-            position:sticky;top:0;background:var(--bg);z-index:10;
+        /* Header */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+            position: relative;
+            z-index: 10;
         }
-        .set-back{
-            display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;
-            border:1px solid var(--border);background:var(--bg);color:var(--fg);
-            font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit;
-            flex-shrink:0;
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .set-back:hover{background:var(--bg-hover);border-color:#d0d0d0}
-        .set-back:active{transform:scale(.97)}
-        .set-back i{font-size:11px;color:var(--fg2)}
-        .set-title{font-size:15px;font-weight:600}
 
-        .set-body{padding:20px 24px;max-width:680px;margin:0 auto;width:100%}
-
-        .set-section{margin-bottom:26px}
-        .set-section-title{font-size:12px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
-        .set-field{margin-bottom:16px}
-        .set-label{font-size:13.5px;font-weight:500;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
-        .set-label .val{font-weight:400;color:var(--accent);font-size:12.5px;font-family:'SF Mono','Fira Code',monospace}
-        .set-desc{font-size:12px;color:var(--fg3);margin-bottom:8px;line-height:1.5}
-
-        .set-select{
-            width:100%;padding:9px 36px 9px 12px;border:1px solid var(--border);border-radius:8px;
-            font-size:13.5px;font-family:inherit;background:var(--bg);color:var(--fg);
-            outline:none;cursor:pointer;transition:border-color .2s;appearance:none;
-            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat:no-repeat;background-position:right 12px center;
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--accent), #34d399);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 800;
+            font-size: 16px;
+            box-shadow: 0 2px 10px rgba(16,163,127,0.3);
         }
-        .set-select:focus{border-color:var(--accent)}
 
-        .set-range{width:100%;height:5px;border-radius:3px;background:var(--bg3);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;margin-top:2px}
-        .set-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.18);cursor:pointer;transition:transform .15s}
-        .set-range::-webkit-slider-thumb:hover{transform:scale(1.15)}
-        .set-range::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.18);cursor:pointer}
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--fg);
+        }
 
-        .set-textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--fg);outline:none;resize:vertical;min-height:90px;line-height:1.5;transition:border-color .2s}
-        .set-textarea:focus{border-color:var(--accent)}
+        .logo-text span {
+            color: var(--accent);
+        }
 
-        .set-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0}
-        .set-toggle-info{flex:1;margin-right:12px}
-        .set-toggle-label{font-size:13.5px;font-weight:500}
-        .set-toggle-desc{font-size:11.5px;color:var(--fg3);margin-top:1px}
-        .set-toggle{width:42px;height:24px;border-radius:12px;background:var(--bg-active);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
-        .set-toggle.on{background:var(--accent)}
-        .set-toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform .2s}
-        .set-toggle.on::after{transform:translateX(18px)}
+        /* Chat area */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
 
-        .set-chips{display:flex;flex-wrap:wrap;gap:6px}
-        .set-chip{padding:5px 13px;border-radius:18px;border:1px solid var(--border);background:var(--bg);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;color:var(--fg)}
-        .set-chip:hover{background:var(--bg-hover)}
-        .set-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-track { background: transparent; }
+        .chat-container::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 10px; }
+        .chat-container::-webkit-scrollbar-thumb:hover { background: #b0b0b0; }
 
-        .set-divider{height:1px;background:var(--border);margin:18px 0}
-        .set-reset{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--fg2);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
-        .set-reset:hover{background:var(--bg-hover);color:var(--fg)}
+        .chat-inner {
+            max-width: 768px;
+            margin: 0 auto;
+            padding: 20px 20px 10px;
+        }
 
-        /* ===== CHAT VIEW ===== */
-        .chat-view{flex:1;overflow-y:auto;display:flex;flex-direction:column}
-        .chat-view::-webkit-scrollbar{width:6px}
-        .chat-view::-webkit-scrollbar-thumb{background:#ddd;border-radius:6px}
-        .chat-view::-webkit-scrollbar-thumb:hover{background:#bbb}
+        /* Welcome screen */
+        .welcome {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            text-align: center;
+            padding: 40px 20px;
+            animation: fadeUp 0.6s ease;
+        }
 
-        .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:20px}
-        .leo-logo{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#10a37f,#0d8c6d);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(16,163,127,.35);animation:logoGlow 3s ease-in-out infinite}
-        @keyframes logoGlow{0%,100%{box-shadow:0 4px 24px rgba(16,163,127,.35)}50%{box-shadow:0 4px 36px rgba(16,163,127,.55)}}
-        .leo-logo svg{width:32px;height:32px}
-        .w-title{font-size:26px;font-weight:600}
-        .w-sub{font-size:15px;color:var(--fg2);text-align:center;max-width:480px;line-height:1.6}
-        .w-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(16,163,127,.08);border:1px solid rgba(16,163,127,.2);border-radius:20px;font-size:12.5px;color:var(--accent);font-weight:500}
-        .w-badge .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-        .suggestions{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:600px;width:100%;margin-top:4px}
-        .sug-card{padding:14px 16px;border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;background:var(--bg)}
-        .sug-card:hover{background:var(--bg2);border-color:#d0d0d0;transform:translateY(-1px);box-shadow:0 1px 4px rgba(0,0,0,.05)}
-        .sug-title{font-size:13.5px;font-weight:500;margin-bottom:3px}
-        .sug-desc{font-size:12px;color:var(--fg3);line-height:1.4}
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        .msgs{max-width:768px;width:100%;margin:0 auto;padding:16px 24px;display:flex;flex-direction:column}
-        .msg{display:flex;gap:16px;padding:20px 0;animation:msgIn .3s ease-out}
-        @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        .msg-body{flex:1;min-width:0}
-        .msg-role{font-size:13px;font-weight:600;margin-bottom:6px}
-        .msg-text{font-size:15px;line-height:1.7;word-wrap:break-word}
-        .msg-text p{margin-bottom:10px}
-        .msg-text p:last-child{margin-bottom:0}
-        .msg-text strong{font-weight:600}
-        .msg-text em{font-style:italic}
-        .msg-text code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:13px;font-family:'SF Mono','Fira Code',monospace;border:1px solid #eee}
-        .msg-text pre{background:var(--code-bg);border-radius:10px;padding:16px;overflow-x:auto;margin:12px 0;position:relative}
-        .msg-text pre code{background:none;border:none;padding:0;color:#e0e0e0;font-size:13px;line-height:1.6}
-        .copy-code{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.1);border:none;color:#aaa;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;font-family:inherit}
-        .copy-code:hover{background:rgba(255,255,255,.2);color:#fff}
-        .msg-text ul,.msg-text ol{padding-left:20px;margin:8px 0}
-        .msg-text li{margin-bottom:4px;line-height:1.6}
-        .msg-text table{border-collapse:collapse;margin:10px 0;font-size:13.5px;width:100%}
-        .msg-text th,.msg-text td{border:1px solid var(--border);padding:8px 12px;text-align:left}
-        .msg-text th{background:var(--bg2);font-weight:600}
-        .msg-text h2{font-size:18px;font-weight:700;margin:16px 0 8px}
-        .msg-text h3{font-size:16px;font-weight:600;margin:14px 0 6px}
-        .msg-text h4{font-size:15px;font-weight:600;margin:12px 0 6px}
-        .msg-text a{color:var(--accent);text-decoration:underline}
-        .msg-meta{display:flex;align-items:center;gap:8px;margin-top:8px;opacity:0;transition:opacity .2s}
-        .msg:hover .msg-meta{opacity:1}
-        .msg-meta button{background:none;border:none;color:var(--fg3);cursor:pointer;padding:4px 6px;border-radius:4px;font-size:13px;transition:all .12s}
-        .msg-meta button:hover{color:var(--fg);background:var(--bg-hover)}
-        .resp-time{font-size:11px;color:var(--fg3);margin-left:4px}
+        .welcome-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--accent), #34d399);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 30px rgba(16,163,127,0.25);
+        }
 
-        .thinking{display:flex;align-items:center;gap:10px;padding:4px 0;color:var(--fg3);font-size:14px}
-        .think-dots{display:flex;gap:5px}
-        .think-dots span{width:8px;height:8px;background:var(--accent);border-radius:50%;animation:thinkDot 1.4s ease-in-out infinite}
-        .think-dots span:nth-child(2){animation-delay:.15s}
-        .think-dots span:nth-child(3){animation-delay:.3s}
-        @keyframes thinkDot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
-        .cursor-blink{display:inline-block;width:2px;height:16px;background:var(--fg);margin-left:1px;vertical-align:text-bottom;animation:blink .8s infinite}
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        .welcome h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
 
-        .stop-btn{display:none;margin:0 auto 8px;padding:8px 16px;border:1px solid var(--border);border-radius:20px;background:var(--bg2);color:var(--fg);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s;gap:6px;align-items:center}
-        .stop-btn.show{display:flex}
-        .stop-btn:hover{background:var(--bg-hover)}
+        .welcome p {
+            color: var(--muted);
+            font-size: 15px;
+            max-width: 420px;
+            line-height: 1.6;
+        }
 
-        .scroll-btn{position:absolute;bottom:100px;left:50%;transform:translateX(-50%) scale(.9);background:var(--bg);border:1px solid var(--border);border-radius:50%;width:36px;height:36px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow);color:var(--fg2);font-size:14px;transition:all .2s;z-index:50}
-        .scroll-btn.show{display:flex;transform:translateX(-50%) scale(1)}
-        .scroll-btn:hover{background:var(--bg-hover)}
+        .suggestions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 32px;
+            width: 100%;
+            max-width: 520px;
+        }
 
-        .input-area{padding:0 24px 20px;max-width:768px;width:100%;margin:0 auto;flex-shrink:0}
-        .input-wrap{position:relative;background:var(--bg);border:1.5px solid var(--border);border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:all .25s;overflow:hidden}
-        .input-wrap:focus-within{border-color:#bbb;box-shadow:var(--shadow)}
-        .chat-input{width:100%;padding:14px 52px 14px 18px;border:none;outline:none;font-size:15px;font-family:inherit;resize:none;max-height:200px;min-height:52px;line-height:1.5;background:transparent;color:var(--fg)}
-        .chat-input::placeholder{color:var(--fg3)}
-        .send-btn{position:absolute;right:10px;bottom:8px;width:34px;height:34px;border-radius:8px;border:none;background:var(--fg);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s}
-        .send-btn:hover{background:#333}
-        .send-btn:disabled{background:var(--bg-active);color:var(--fg3);cursor:not-allowed}
-        .input-hint{text-align:center;padding:0 12px 10px;font-size:11.5px;color:var(--fg3)}
+        .suggestion-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13.5px;
+            color: var(--fg);
+            line-height: 1.5;
+        }
 
-        .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--fg);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:all .3s;z-index:1000;pointer-events:none}
-        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-        .err-banner{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin:8px 0;font-size:13.5px;color:#991b1b;display:flex;align-items:center;gap:10px}
-        .err-banner button{background:none;border:none;color:#dc2626;cursor:pointer;font-weight:600;font-family:inherit;font-size:13px;text-decoration:underline}
+        .suggestion-card:hover {
+            background: #efefef;
+            border-color: #d0d0d0;
+            transform: translateY(-1px);
+        }
 
-        @media(max-width:768px){
-            .sidebar{position:absolute;height:100%;box-shadow:0 8px 30px rgba(0,0,0,.12)}
-            .suggestions{grid-template-columns:1fr}
-            .msgs{padding:12px 16px}
-            .input-area{padding:0 12px 12px}
-            .set-body{padding:16px}
+        .suggestion-card .sc-icon {
+            font-size: 18px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Messages */
+        .message {
+            display: flex;
+            gap: 14px;
+            padding: 20px 0;
+            animation: msgIn 0.35s ease;
+        }
+
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message + .message {
+            border-top: 1px solid var(--border);
+        }
+
+        .msg-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .msg-avatar.user-av {
+            background: #e8e8ed;
+            color: #555;
+        }
+
+        .msg-avatar.ai-av {
+            background: linear-gradient(135deg, var(--accent), #34d399);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .msg-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .msg-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .msg-content {
+            font-size: 15px;
+            line-height: 1.75;
+            color: #333;
+            word-break: break-word;
+        }
+
+        .msg-content p { margin-bottom: 10px; }
+        .msg-content p:last-child { margin-bottom: 0; }
+
+        .msg-content strong { font-weight: 600; color: var(--fg); }
+
+        .msg-content code {
+            background: #f1f1f3;
+            padding: 2px 7px;
+            border-radius: 5px;
+            font-size: 13.5px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #c7254e;
+        }
+
+        .msg-content pre {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 16px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-size: 13px;
+            line-height: 1.6;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .msg-content ul, .msg-content ol {
+            padding-left: 22px;
+            margin: 8px 0;
+        }
+
+        .msg-content li {
+            margin-bottom: 5px;
+            line-height: 1.65;
+        }
+
+        .msg-content h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 14px 0 6px;
+            color: var(--fg);
+        }
+
+        .msg-image {
+            max-width: 360px;
+            max-height: 280px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+        }
+
+        /* Typing indicator */
+        .typing-dots {
+            display: inline-flex;
+            gap: 5px;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .typing-dots span {
+            width: 7px;
+            height: 7px;
+            background: var(--muted);
+            border-radius: 50%;
+            animation: dotBounce 1.2s infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes dotBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+
+        /* Input area */
+        .input-area {
+            padding: 0 20px 20px;
+            background: var(--bg);
+        }
+
+        .input-wrapper {
+            max-width: 768px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .input-box {
+            display: flex;
+            align-items: flex-end;
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 26px;
+            padding: 8px 8px 8px 18px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(16,163,127,0.1), 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        /* Preview gambar di input */
+        .input-preview {
+            display: none;
+            padding: 8px 0 6px;
+        }
+
+        .input-preview.active { display: block; }
+
+        .preview-item {
+            position: relative;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .preview-item img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .preview-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .preview-remove:hover { background: #e53935; }
+
+        #chatInput {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 15px;
+            resize: none;
+            max-height: 160px;
+            min-height: 24px;
+            line-height: 1.5;
+            padding: 6px 0;
+            color: var(--fg);
+        }
+
+        #chatInput::placeholder { color: var(--muted); }
+
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .btn-icon {
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--muted);
+            font-size: 17px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .btn-icon:hover {
+            background: #e5e5e5;
+            color: var(--fg);
+        }
+
+        .btn-send {
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .btn-send.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn-send.active:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 12px;
+            color: #bbb;
+            margin-top: 10px;
+        }
+
+        /* Drag overlay */
+        .drag-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.92);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+            backdrop-filter: blur(8px);
+        }
+
+        .drag-overlay.active { display: flex; }
+
+        .drag-overlay i {
+            font-size: 48px;
+            color: var(--accent);
+        }
+
+        .drag-overlay p {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--fg);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-80px);
+            background: #333;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 200;
+            transition: transform 0.35s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* Responsif */
+        @media (max-width: 600px) {
+            .suggestions { grid-template-columns: 1fr; }
+            .welcome h1 { font-size: 22px; }
+            .welcome-icon { width: 56px; height: 56px; font-size: 24px; border-radius: 16px; }
+            .msg-image { max-width: 240px; max-height: 200px; }
         }
     </style>
 </head>
 <body>
 
-<!-- Sidebar -->
-<aside class="sidebar" id="sidebar">
-    <div class="sb-head">
-        <button class="new-chat" onclick="newChat()">
-            <i class="fa-solid fa-plus"></i> Obrolan baru
-        </button>
-    </div>
-    <div class="sb-search">
-        <input type="text" placeholder="Cari obrolan..." id="searchInput" oninput="renderConvs()">
-    </div>
-    <div class="sb-list" id="convList"></div>
-    <div class="sb-foot">
-        <div class="sb-user">
-            <div class="avatar-sm">U</div>
-            <div>
-                <div class="u-name">User</div>
-                <div class="u-plan">LEO AI Free</div>
-            </div>
-            <i class="fa-solid fa-ellipsis" style="color:var(--fg3);font-size:14px;margin-left:auto"></i>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">L</div>
+            <div class="logo-text"><span>LEO</span> AI</div>
         </div>
-    </div>
-</aside>
+    </header>
 
-<!-- Main -->
-<main class="main">
-    <div class="top-bar">
-        <button class="tb-btn" onclick="toggleSidebar()" title="Sidebar">
-            <i class="fa-solid fa-bars"></i>
-        </button>
-        <span class="model-label" id="modelLabel">LEO AI 4o</span>
-        <div class="spacer"></div>
-        <button class="tb-btn" onclick="openSettings()" title="Pengaturan" style="font-size:16px">
-            <i class="fa-solid fa-sliders"></i>
-        </button>
-    </div>
-
-    <!-- VIEW 1: Chat (welcome + pesan) -->
-    <div class="view" id="chatView">
-        <div class="chat-view" id="chatArea">
-            <div class="welcome" id="welcome">
-                <div class="leo-logo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-                    </svg>
-                </div>
-                <div class="w-title">Apa yang bisa saya bantu?</div>
-                <div class="w-sub">LEO AI menggunakan model AI terbaru untuk memberikan jawaban yang cerdas dan akurat.</div>
-                <div class="w-badge"><span class="dot"></span> Online — AI aktif dan siap</div>
+    <!-- Chat Area -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-inner" id="chatInner">
+            <!-- Welcome Screen -->
+            <div class="welcome" id="welcomeScreen">
+                <div class="welcome-icon">L</div>
+                <h1>Halo, ada yang bisa saya bantu?</h1>
+                <p>Saya LEO AI, asisten cerdas Anda. Tanyakan apa saja atau unggah gambar untuk dianalisis.</p>
                 <div class="suggestions">
-                    <div class="sug-card" onclick="useSug('Jelaskan konsep quantum computing dengan bahasa sederhana')">
-                        <div class="sug-title">Jelaskan quantum computing</div>
-                        <div class="sug-desc">Bahasa sederhana dan mudah dipahami</div>
+                    <div class="suggestion-card" onclick="useSuggestion(this)">
+                        <span class="sc-icon"><i class="fa-solid fa-lightbulb"></i></span>
+                        Jelaskan konsep quantum computing dengan sederhana
                     </div>
-                    <div class="sug-card" onclick="useSug('Buatkan website landing page toko kopi dengan HTML CSS JS')">
-                        <div class="sug-title">Buat landing page toko kopi</div>
-                        <div class="sug-desc">Kode lengkap HTML, CSS, dan JS</div>
+                    <div class="suggestion-card" onclick="useSuggestion(this)">
+                        <span class="sc-icon"><i class="fa-solid fa-code"></i></span>
+                        Buatkan fungsi JavaScript untuk validasi email
                     </div>
-                    <div class="sug-card" onclick="useSug('Buatkan rencana belajar Python dari nol sampai mahir')">
-                        <div class="sug-title">Rencana belajar Python</div>
-                        <div class="sug-desc">Roadmap lengkap dari pemula</div>
+                    <div class="suggestion-card" onclick="useSuggestion(this)">
+                        <span class="sc-icon"><i class="fa-solid fa-pen-fancy"></i></span>
+                        Tuliskan paragraf persuasif untuk produk skincare
                     </div>
-                    <div class="sug-card" onclick="useSug('Tulis esai tentang dampak AI terhadap pendidikan di Indonesia')">
-                        <div class="sug-title">Esai dampak AI pada pendidikan</div>
-                        <div class="sug-desc">Analisis mendalam dan terstruktur</div>
-                    </div>
-                </div>
-            </div>
-            <div class="msgs" id="msgs" style="display:none"></div>
-        </div>
-        <button class="stop-btn" id="stopBtn" onclick="stopGen()"><i class="fa-solid fa-stop"></i> Berhenti</button>
-        <button class="scroll-btn" id="scrollBtn" onclick="scrollBot()"><i class="fa-solid fa-chevron-down"></i></button>
-    </div>
-
-    <!-- VIEW 2: Pengaturan (bergantian dengan chat, bukan numpuk) -->
-    <div class="view hidden" id="settingsView">
-        <div class="settings-view">
-            <div class="set-head">
-                <button class="set-back" onclick="closeSettings()">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    Kembali
-                </button>
-                <span class="set-title">Pengaturan</span>
-            </div>
-            <div class="set-body">
-                <div class="set-section">
-                    <div class="set-section-title">Model AI</div>
-                    <div class="set-field">
-                        <div class="set-label">Model</div>
-                        <select class="set-select" id="setModel" onchange="onSetChange()">
-                            <option value="openai">LEO AI 4o — Paling cerdas</option>
-                            <option value="deepseek">LEO AI DeepSeek — Reasoning</option>
-                            <option value="mistral">LEO AI Mistral — Ringan</option>
-                            <option value="qwen">LEO AI Qwen — Multibahasa</option>
-                            <option value="llama">LEO AI Llama — Open source</option>
-                        </select>
+                    <div class="suggestion-card" onclick="useSuggestion(this)">
+                        <span class="sc-icon"><i class="fa-solid fa-image"></i></span>
+                        Unggah gambar lalu saya akan menganalisisnya
                     </div>
                 </div>
-                <div class="set-divider"></div>
-                <div class="set-section">
-                    <div class="set-section-title">Parameter</div>
-                    <div class="set-field">
-                        <div class="set-label">Temperature <span class="val" id="tempVal">0.7</span></div>
-                        <div class="set-desc">Makin tinggi = makin kreatif, makin rendah = makin fokus</div>
-                        <input type="range" class="set-range" id="setTemp" min="0" max="1.5" step="0.1" value="0.7"
-                            oninput="document.getElementById('tempVal').textContent=this.value;onSetChange()">
-                    </div>
-                    <div class="set-field">
-                        <div class="set-label">Max Tokens <span class="val" id="tokVal">2048</span></div>
-                        <div class="set-desc">Panjang maks jawaban (1 token ≈ 0.75 kata)</div>
-                        <input type="range" class="set-range" id="setTok" min="256" max="8192" step="256" value="2048"
-                            oninput="document.getElementById('tokVal').textContent=this.value;onSetChange()">
-                    </div>
-                    <div class="set-field">
-                        <div class="set-label">Top P <span class="val" id="topPVal">0.9</span></div>
-                        <div class="set-desc">Nucleus sampling — diversitas kosakata</div>
-                        <input type="range" class="set-range" id="setTopP" min="0" max="1" step="0.05" value="0.9"
-                            oninput="document.getElementById('topPVal').textContent=this.value;onSetChange()">
-                    </div>
-                </div>
-                <div class="set-divider"></div>
-                <div class="set-section">
-                    <div class="set-section-title">Gaya Jawaban</div>
-                    <div class="set-chips" id="styleChips">
-                        <button class="set-chip active" data-style="balanced" onclick="pickStyle(this)">Seimbang</button>
-                        <button class="set-chip" data-style="formal" onclick="pickStyle(this)">Formal</button>
-                        <button class="set-chip" data-style="casual" onclick="pickStyle(this)">Santai</button>
-                        <button class="set-chip" data-style="technical" onclick="pickStyle(this)">Teknis</button>
-                        <button class="set-chip" data-style="creative" onclick="pickStyle(this)">Kreatif</button>
-                        <button class="set-chip" data-style="concise" onclick="pickStyle(this)">Ringkas</button>
-                    </div>
-                </div>
-                <div class="set-divider"></div>
-                <div class="set-section">
-                    <div class="set-section-title">Instruksi Sistem</div>
-                    <div class="set-field">
-                        <div class="set-desc">Instruksi dasar yang menentukan perilaku AI.</div>
-                        <textarea class="set-textarea" id="setSysPrompt" rows="5" oninput="onSetChange()"></textarea>
-                    </div>
-                </div>
-                <div class="set-divider"></div>
-                <div class="set-section">
-                    <div class="set-section-title">Tampilan</div>
-                    <div class="set-toggle-row">
-                        <div class="set-toggle-info">
-                            <div class="set-toggle-label">Efek Streaming</div>
-                            <div class="set-toggle-desc">Tampilkan jawaban karakter per karakter</div>
-                        </div>
-                        <button class="set-toggle on" id="togStream" onclick="toggleSet(this)"></button>
-                    </div>
-                    <div class="set-toggle-row" style="margin-top:6px">
-                        <div class="set-toggle-info">
-                            <div class="set-toggle-label">Waktu Respons</div>
-                            <div class="set-toggle-desc">Tampilkan durasi di setiap jawaban</div>
-                        </div>
-                        <button class="set-toggle on" id="togTime" onclick="toggleSet(this)"></button>
-                    </div>
-                    <div class="set-toggle-row" style="margin-top:6px">
-                        <div class="set-toggle-info">
-                            <div class="set-toggle-label">Animasi Pesan</div>
-                            <div class="set-toggle-desc">Efek fade-in saat pesan muncul</div>
-                        </div>
-                        <button class="set-toggle on" id="togAnim" onclick="toggleSet(this)"></button>
-                    </div>
-                </div>
-                <div class="set-divider"></div>
-                <button class="set-reset" onclick="resetSettings()">
-                    <i class="fa-solid fa-rotate-left" style="margin-right:6px"></i> Atur Ulang ke Default
-                </button>
             </div>
         </div>
     </div>
 
-    <!-- Input area selalu di bawah, tapi sembunyi saat settings terbuka -->
-    <div class="input-area" id="inputArea">
-        <div class="input-wrap">
-            <textarea class="chat-input" id="chatIn" placeholder="Kirim pesan ke LEO AI" rows="1"
-                onkeydown="onKey(event)" oninput="autoH(this)"></textarea>
-            <button class="send-btn" id="sendBtn" onclick="send()" disabled>
-                <i class="fa-solid fa-arrow-up"></i>
-            </button>
-        </div>
-        <div class="input-hint">LEO AI bisa membuat kesalahan. Periksa informasi penting.</div>
+    <!-- Drag Overlay -->
+    <div class="drag-overlay" id="dragOverlay">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <p>Lepaskan gambar di sini</p>
     </div>
-</main>
 
-<div class="toast" id="toast"></div>
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+        <div class="input-wrapper">
+            <div class="input-preview" id="inputPreview"></div>
+            <div class="input-box" id="inputBox">
+                <textarea id="chatInput" rows="1" placeholder="Ketik pesan Anda..." aria-label="Pesan"></textarea>
+                <div class="input-actions">
+                    <button class="btn-icon" id="btnUpload" title="Unggah gambar" aria-label="Unggah gambar">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                    <button class="btn-send" id="btnSend" title="Kirim" aria-label="Kirim pesan">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                </div>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" hidden>
+            <div class="footer-note">LEO AI dapat membuat kesalahan. Periksa informasi penting.</div>
+        </div>
+    </div>
 
 <script>
-/* ====== DEFAULTS ====== */
-const API_URL='https://text.pollinations.ai/';
-const DEFAULT_SYS=`Kamu adalah LEO AI, asisten kecerdasan buatan yang sangat cerdas, cepat, dan membantu.
+    // === ELEMEN DOM ===
+    const chatContainer = document.getElementById('chatContainer');
+    const chatInner = document.getElementById('chatInner');
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const chatInput = document.getElementById('chatInput');
+    const btnSend = document.getElementById('btnSend');
+    const btnUpload = document.getElementById('btnUpload');
+    const fileInput = document.getElementById('fileInput');
+    const inputPreview = document.getElementById('inputPreview');
+    const dragOverlay = document.getElementById('dragOverlay');
+    const toast = document.getElementById('toast');
 
-ATURAN:
-1. Berbahasa Indonesia secara default, kecuali pengguna menggunakan bahasa lain
-2. Gunakan markdown: **bold**, *italic*, ## heading, - list, \`code\`, \`\`\`code block\`\`\`, tabel
-3. Jawaban terstruktur, akurat, berkualitas tinggi
-4. Untuk coding SELALU sertakan code block
-5. Jangan terlalu verbose jika pertanyaan sederhana
-6. Jujur jika tidak yakin — jangan mengarang
-7. Gunakan tabel jika cocok untuk perbandingan
-8. Untuk penjelasan teknis gunakan analogi`;
+    let pendingImages = []; // array { file, dataUrl }
+    let isGenerating = false;
+    let conversationHistory = [];
 
-const STYLE_MAP={
-    balanced:'',formal:'\nGaya: Formal dan profesional. Bahasa baku.',
-    casual:'\nGaya: Santai dan friendly. Bahasa sehari-hari.',
-    technical:'\nGaya: Teknis dan detail. Terminologi tepat.',
-    creative:'\nGaya: Kreatif. Analogi menarik, metafora.',
-    concise:'\nGaya: Ringkas. Langsung ke inti, minimal filler.'
-};
-const MODEL_NAMES={openai:'LEO AI 4o',deepseek:'LEO AI DeepSeek',mistral:'LEO AI Mistral',qwen:'LEO AI Qwen',llama:'LEO AI Llama'};
-
-let S={model:'openai',temp:0.7,maxTokens:2048,topP:0.9,stream:true,showTime:true,anim:true,style:'balanced',sysPrompt:DEFAULT_SYS};
-let modelLabel='LEO AI 4o';
-let convs=[],activeId=null,generating=false,abortCtrl=null;
-
-const chatIn=document.getElementById('chatIn'),sendBtn=document.getElementById('sendBtn'),
-      chatArea=document.getElementById('chatArea'),msgsEl=document.getElementById('msgs'),
-      welcomeEl=document.getElementById('welcome'),stopBtn=document.getElementById('stopBtn'),
-      scrollBtn=document.getElementById('scrollBtn'),
-      chatView=document.getElementById('chatView'),
-      settingsView=document.getElementById('settingsView'),
-      inputArea=document.getElementById('inputArea');
-
-chatIn.addEventListener('input',()=>{sendBtn.disabled=!chatIn.value.trim()});
-chatArea.addEventListener('scroll',()=>{scrollBtn.classList.toggle('show',chatArea.scrollHeight-chatArea.scrollTop-chatArea.clientHeight>200)});
-
-/* ====== VIEW SWITCH: chat <-> settings ====== */
-function openSettings(){
-    chatView.classList.add('hidden');
-    settingsView.classList.remove('hidden');
-    inputArea.style.display='none';
-    syncUI();
-}
-function closeSettings(){
-    settingsView.classList.add('hidden');
-    chatView.classList.remove('hidden');
-    inputArea.style.display='';
-    scrollBot();
-}
-
-/* ====== SETTINGS ====== */
-function syncUI(){
-    document.getElementById('setModel').value=S.model;
-    document.getElementById('setTemp').value=S.temp;
-    document.getElementById('tempVal').textContent=S.temp;
-    document.getElementById('setTok').value=S.maxTokens;
-    document.getElementById('tokVal').textContent=S.maxTokens;
-    document.getElementById('setTopP').value=S.topP;
-    document.getElementById('topPVal').textContent=S.topP;
-    document.getElementById('setSysPrompt').value=S.sysPrompt;
-    setTog('togStream',S.stream);setTog('togTime',S.showTime);setTog('togAnim',S.anim);
-    document.querySelectorAll('#styleChips .set-chip').forEach(c=>c.classList.toggle('active',c.dataset.style===S.style));
-}
-function setTog(id,v){document.getElementById(id).classList.toggle('on',v)}
-function toggleSet(btn){btn.classList.toggle('on');onSetChange()}
-function pickStyle(el){document.querySelectorAll('#styleChips .set-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');onSetChange()}
-function onSetChange(){
-    S.model=document.getElementById('setModel').value;
-    S.temp=parseFloat(document.getElementById('setTemp').value);
-    S.maxTokens=parseInt(document.getElementById('setTok').value);
-    S.topP=parseFloat(document.getElementById('setTopP').value);
-    S.sysPrompt=document.getElementById('setSysPrompt').value;
-    S.stream=document.getElementById('togStream').classList.contains('on');
-    S.showTime=document.getElementById('togTime').classList.contains('on');
-    S.anim=document.getElementById('togAnim').classList.contains('on');
-    const chip=document.querySelector('#styleChips .set-chip.active');
-    S.style=chip?chip.dataset.style:'balanced';
-    modelLabel=MODEL_NAMES[S.model]||'LEO AI 4o';
-    document.getElementById('modelLabel').textContent=modelLabel;
-}
-function resetSettings(){
-    S={model:'openai',temp:0.7,maxTokens:2048,topP:0.9,stream:true,showTime:true,anim:true,style:'balanced',sysPrompt:DEFAULT_SYS};
-    syncUI();modelLabel='LEO AI 4o';document.getElementById('modelLabel').textContent=modelLabel;
-    toast('Pengaturan diatur ulang');
-}
-
-/* ====== SIDEBAR ====== */
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed')}
-
-/* ====== UTILS ====== */
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
-function scrollBot(){requestAnimationFrame(()=>{chatArea.scrollTop=chatArea.scrollHeight})}
-function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px'}
-function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!sendBtn.disabled&&!generating)send()}}
-function useSug(t){chatIn.value=t;sendBtn.disabled=false;send()}
-
-/* ====== MARKDOWN ====== */
-function md(text){
-    if(!text)return'';
-    let h=esc(text);
-    h=h.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>`<pre><code>${code.trim()}</code><button class="copy-code" onclick="copyCode(this)">Salin</button></pre>`);
-    h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
-    h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-    h=h.replace(/\*(.+?)\*/g,'<em>$1</em>');
-    h=h.replace(/^#### (.+)$/gm,'<h4>$1</h4>');
-    h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');
-    h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');
-    h=h.replace(/^# (.+)$/gm,'<h2>$1</h2>');
-    h=h.replace(/^[\-\*] (.+)$/gm,'LI$1');
-    h=h.replace(/^\d+\. (.+)$/gm,'LI$1');
-    h=h.replace(/(LI[^\n]*)\n?/g,'<li>$1</li>');
-    h=h.replace(/(<li>LI)/g,'<li>');
-    h=h.replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>');
-    h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
-    h=h.replace(/\n\n/g,'</p><p>');
-    h=h.replace(/\n/g,'<br>');
-    if(!h.startsWith('<'))h='<p>'+h+'</p>';
-    return h;
-}
-function copyCode(btn){navigator.clipboard.writeText(btn.previousElementSibling.textContent);btn.textContent='Tersalin!';setTimeout(()=>btn.textContent='Salin',1500)}
-
-/* ====== API ====== */
-function buildSys(){return(S.sysPrompt||DEFAULT_SYS)+(STYLE_MAP[S.style]||'')}
-
-async function callAI(messages,onChunk,onDone,onErr){
-    abortCtrl=new AbortController();
-    const t0=Date.now();
-    const apiMsgs=[{role:'system',content:buildSys()},...messages.map(m=>({role:m.role==='leo'?'assistant':'user',content:m.content}))];
-    const trimmed=apiMsgs.length>21?[apiMsgs[0],...apiMsgs.slice(-20)]:apiMsgs;
-    const timeout=setTimeout(()=>abortCtrl.abort(),45000);
-    try{
-        try{
-            const res=await fetch('https://text.pollinations.ai/openai/chat/completions',{
-                method:'POST',headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({model:S.model,messages:trimmed,stream:true,temperature:S.temp,max_tokens:S.maxTokens,top_p:S.topP}),
-                signal:abortCtrl.signal
-            });
-            if(res.ok){
-                const reader=res.body.getReader(),dec=new TextDecoder();
-                let buf='',full='',worked=false;
-                while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop()||'';
-                for(const line of lines){const tl=line.trim();if(!tl.startsWith('data: '))continue;const d=tl.slice(6);if(d==='[DONE]')continue;try{const j=JSON.parse(d);const c=j.choices?.[0]?.delta?.content;if(c){worked=true;full+=c;onChunk(full)}}catch{}}}
-                if(worked&&full.trim()){clearTimeout(timeout);onDone(full,Date.now()-t0);return}
-            }
-        }catch(e){if(e.name==='AbortError'){clearTimeout(timeout);onDone(null,0,true);return}}
-        if(abortCtrl.signal.aborted){clearTimeout(timeout);return}
-        const res2=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:trimmed,model:S.model,seed:Math.floor(Math.random()*1e5),temperature:S.temp,max_tokens:S.maxTokens}),signal:abortCtrl.signal});
-        if(!res2.ok)throw new Error('API error '+res2.status);
-        const text=await res2.text();
-        if(!text||text.trim().length<3)throw new Error('Empty response');
-        clearTimeout(timeout);
-        if(S.stream)await localStream(text,onChunk);else onChunk(text);
-        onDone(text,Date.now()-t0);
-    }catch(err){clearTimeout(timeout);if(err.name==='AbortError'){onDone(null,0,true);return}onErr(err.message)}
-}
-
-async function localStream(text,onChunk){
-    for(let i=0;i<text.length;i++){
-        if(abortCtrl?.signal.aborted)break;
-        onChunk(text.slice(0,i+1));
-        let d=5;const c=text[i];
-        if(c==='.'||c==='!'||c==='?')d=35;else if(c===',')d=18;else if(c==='\n')d=12;else if(i>500)d=2;else if(i>200)d=3;
-        await sleep(d);
-    }
-}
-
-/* ====== CHAT ====== */
-function newChat(){if(generating)return;activeId=null;msgsEl.innerHTML='';msgsEl.style.display='none';welcomeEl.style.display='flex';renderConvs()}
-
-async function send(){
-    const text=chatIn.value.trim();if(!text||generating)return;
-    // Pastikan di chat view
-    if(!chatView.classList.contains('hidden')===false){closeSettings()}
-    if(!activeId){const c={id:Date.now().toString(),title:text.slice(0,50),messages:[],ts:new Date()};convs.unshift(c);activeId=c.id}
-    const conv=convs.find(c=>c.id===activeId);
-    conv.messages.push({role:'user',content:text});
-    welcomeEl.style.display='none';msgsEl.style.display='flex';renderMsgs();renderConvs();
-    chatIn.value='';chatIn.style.height='auto';sendBtn.disabled=true;
-    triggerAI(conv);
-}
-
-function triggerAI(conv){
-    const aiMsg={role:'leo',content:''};
-    conv.messages.push(aiMsg);renderMsgs(true);
-    generating=true;stopBtn.classList.add('show');
-    callAI(
-        conv.messages.slice(0,-1),
-        p=>{aiMsg.content=p;const el=msgsEl.querySelector('.msg:last-child .msg-text');if(el)el.innerHTML=md(p)+'<span class="cursor-blink"></span>';scrollBot()},
-        (ft,ms,ab)=>{
-            if(ab)aiMsg.content=aiMsg.content||'(Dihentikan)';else if(ft)aiMsg.content=ft;
-            const el=msgsEl.querySelector('.msg:last-child .msg-text');
-            if(el){el.innerHTML=md(aiMsg.content);const c=el.querySelector('.cursor-blink');if(c)c.remove()}
-            addMeta(ab,ms);generating=false;stopBtn.classList.remove('show');abortCtrl=null;scrollBot();
-        },
-        e=>{const el=msgsEl.querySelector('.msg:last-child .msg-text');if(el)el.innerHTML=`<div class="err-banner"><i class="fa-solid fa-triangle-exclamation"></i><span>Gagal: ${esc(e)}</span><button onclick="regenLast()">Coba lagi</button></div>`;conv.messages.pop();generating=false;stopBtn.classList.remove('show');abortCtrl=null}
-    );
-}
-
-function addMeta(ab,ms){
-    const body=msgsEl.querySelector('.msg:last-child .msg-body');if(!body)return;
-    const m=document.createElement('div');m.className='msg-meta';
-    let t='';if(!ab&&ms&&S.showTime)t=`<span class="resp-time">${(ms/1000).toFixed(1)} detik</span>`;
-    m.innerHTML=`<button onclick="copyLast()" title="Salin"><i class="fa-regular fa-clipboard"></i></button><button onclick="regenLast()" title="Regenerasi"><i class="fa-solid fa-arrows-rotate"></i></button>${t}`;
-    body.appendChild(m);
-}
-
-function stopGen(){if(abortCtrl)abortCtrl.abort()}
-function regenLast(){if(generating)return;const conv=convs.find(c=>c.id===activeId);if(!conv||conv.messages.length<2)return;conv.messages.pop();const lu=[...conv.messages].reverse().find(m=>m.role==='user');if(!lu)return;renderMsgs();triggerAI(conv)}
-function copyLast(){const conv=convs.find(c=>c.id===activeId);if(!conv)return;navigator.clipboard.writeText(conv.messages[conv.messages.length-1].content).then(()=>toast('Tersalin ke clipboard'))}
-
-/* ====== RENDER ====== */
-function renderMsgs(thinking=false){
-    const conv=convs.find(c=>c.id===activeId);if(!conv)return;
-    msgsEl.innerHTML='';
-    conv.messages.forEach((m,i)=>{
-        const isLeo=m.role==='leo',isLast=i===conv.messages.length-1;
-        const div=document.createElement('div');div.className='msg';
-        if(!S.anim)div.style.animation='none';
-        let th='';
-        if(isLeo&&m.content===''&&thinking&&isLast)th='<div class="thinking"><span>LEO AI sedang berpikir</span><div class="think-dots"><span></span><span></span><span></span></div></div>';
-        else th=md(m.content);
-        let mh='';
-        if(!thinking||!isLast)mh=`<div class="msg-meta"><button onclick="copyMsg(${i})"><i class="fa-regular fa-clipboard"></i></button>${isLeo?`<button onclick="regenMsg(${i})"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div>`;
-        div.innerHTML=`<div class="${isLeo?'avatar-ai':'avatar-sm'}">${isLeo?'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>':'U'}</div><div class="msg-body"><div class="msg-role">${isLeo?modelLabel:'Anda'}</div><div class="msg-text">${th}</div>${mh}</div>`;
-        msgsEl.appendChild(div);
+    // === AUTO-RESIZE TEXTAREA ===
+    chatInput.addEventListener('input', () => {
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+        toggleSendBtn();
     });
-    scrollBot();
-}
-function copyMsg(idx){const conv=convs.find(c=>c.id===activeId);if(!conv)return;navigator.clipboard.writeText(conv.messages[idx].content).then(()=>toast('Tersalin'))}
-function regenMsg(idx){if(generating)return;const conv=convs.find(c=>c.id===activeId);if(!conv)return;conv.messages.splice(idx);const lu=[...conv.messages].reverse().find(m=>m.role==='user');if(!lu)return;renderMsgs();triggerAI(conv)}
 
-/* ====== CONVERSATIONS ====== */
-function renderConvs(){
-    const list=document.getElementById('convList'),q=document.getElementById('searchInput').value.toLowerCase();
-    const filtered=convs.filter(c=>c.title.toLowerCase().includes(q));
-    if(!filtered.length){list.innerHTML='<div style="padding:20px;text-align:center;font-size:13px;color:var(--fg3)">Belum ada obrolan</div>';return}
-    const groups={};filtered.forEach(c=>{const k=gk(new Date(c.ts));if(!groups[k])groups[k]=[];groups[k].push(c)});
-    let html='';
-    for(const[label,items]of Object.entries(groups)){
-        html+=`<div class="sb-label">${label}</div>`;
-        items.forEach(c=>{html+=`<div class="sb-item ${c.id===activeId?'active':''}" onclick="loadConv('${c.id}')"><i class="fa-regular fa-message" style="font-size:13px;color:var(--fg3);flex-shrink:0"></i><span class="t">${esc(c.title)}</span><div class="a"><button onclick="event.stopPropagation();renameConv('${c.id}')"><i class="fa-solid fa-pen"></i></button><button onclick="event.stopPropagation();delConv('${c.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`});
+    function toggleSendBtn() {
+        const hasContent = chatInput.value.trim().length > 0 || pendingImages.length > 0;
+        btnSend.classList.toggle('active', hasContent);
     }
-    list.innerHTML=html;
-}
-function gk(d){const n=new Date(),df=n-d;if(df<864e5&&d.getDate()===n.getDate())return'Hari Ini';if(df<1728e5)return'Kemarin';if(df<6048e5)return'7 Hari Terakhir';if(df<2592e6)return'30 Hari Terakhir';return'Lebih Lama'}
-function loadConv(id){if(generating)return;activeId=id;welcomeEl.style.display='none';msgsEl.style.display='flex';renderMsgs();renderConvs();scrollBot();if(window.innerWidth<=768)document.getElementById('sidebar').classList.add('collapsed')}
-function delConv(id){convs=convs.filter(c=>c.id!==id);if(activeId===id)newChat();else renderConvs();toast('Obrolan dihapus')}
-function renameConv(id){const conv=convs.find(c=>c.id===id);if(!conv)return;const span=document.querySelector(`.sb-item.active .t`);if(!span)return;const inp=document.createElement('input');inp.value=conv.title;inp.style.cssText='width:100%;border:1px solid var(--accent);border-radius:4px;padding:2px 6px;font-size:13px;font-family:inherit;outline:none;';const done=()=>{conv.title=inp.value.trim()||'Obrolan baru';renderConvs()};inp.addEventListener('blur',done);inp.addEventListener('keydown',e=>{if(e.key==='Enter')done();if(e.key==='Escape')renderConvs()});span.replaceWith(inp);inp.focus();inp.select()}
 
-/* ====== KEYBOARD ====== */
-document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'){
-        if(!settingsView.classList.contains('hidden'))closeSettings();
+    // === FILE UPLOAD ===
+    btnUpload.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+        fileInput.value = '';
+    });
+
+    function handleFiles(files) {
+        for (const file of files) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Hanya file gambar yang didukung');
+                continue;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('Ukuran gambar maksimal 10MB');
+                continue;
+            }
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                pendingImages.push({ file, dataUrl: ev.target.result });
+                renderPreviews();
+                toggleSendBtn();
+            };
+            reader.readAsDataURL(file);
+        }
     }
+
+    function renderPreviews() {
+        inputPreview.innerHTML = '';
+        if (pendingImages.length === 0) {
+            inputPreview.classList.remove('active');
+            return;
+        }
+        inputPreview.classList.add('active');
+        pendingImages.forEach((img, idx) => {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.innerHTML = `
+                <img src="${img.dataUrl}" alt="Preview">
+                <button class="preview-remove" onclick="removePreview(${idx})" aria-label="Hapus gambar"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            inputPreview.appendChild(div);
+        });
+    }
+
+    function removePreview(idx) {
+        pendingImages.splice(idx, 1);
+        renderPreviews();
+        toggleSendBtn();
+    }
+
+    // === DRAG & DROP ===
+    let dragCounter = 0;
+    document.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dragCounter++;
+        dragOverlay.classList.add('active');
+    });
+    document.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) { dragCounter = 0; dragOverlay.classList.remove('active'); }
+    });
+    document.addEventListener('dragover', (e) => e.preventDefault());
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragCounter = 0;
+        dragOverlay.classList.remove('active');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    // === KIRIM PESAN ===
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+    btnSend.addEventListener('click', sendMessage);
+
+    function sendMessage() {
+        if (isGenerating) return;
+        const text = chatInput.value.trim();
+        if (!text && pendingImages.length === 0) return;
+
+        // Sembunyikan welcome
+        if (welcomeScreen) welcomeScreen.style.display = 'none';
+
+        // Buat pesan user
+        const images = [...pendingImages];
+        pendingImages = [];
+        renderPreviews();
+
+        addMessage('user', text, images);
+        conversationHistory.push({ role: 'user', content: text, hasImage: images.length > 0 });
+
+        chatInput.value = '';
+        chatInput.style.height = 'auto';
+        toggleSendBtn();
+
+        // Respons AI
+        isGenerating = true;
+        showTyping();
+
+        // Simulasi delay "berpikir"
+        const delay = 600 + Math.random() * 800;
+        setTimeout(() => {
+            removeTyping();
+            const response = generateResponse(text, images);
+            typeMessage(response);
+        }, delay);
+    }
+
+    function addMessage(role, text, images = []) {
+        const div = document.createElement('div');
+        div.className = 'message';
+
+        const avatarClass = role === 'user' ? 'user-av' : 'ai-av';
+        const avatarText = role === 'user' ? 'Kamu' : 'L';
+        const name = role === 'user' ? 'Kamu' : 'LEO AI';
+
+        let html = `
+            <div class="msg-avatar ${avatarClass}">${avatarText}</div>
+            <div class="msg-body">
+                <div class="msg-name">${name}</div>
+                <div class="msg-content">
+        `;
+
+        if (images.length > 0) {
+            images.forEach(img => {
+                html += `<img class="msg-image" src="${img.dataUrl}" alt="Gambar yang diunggah">`;
+            });
+        }
+
+        if (text) {
+            html += `<p>${escapeHtml(text)}</p>`;
+        }
+
+        html += `</div></div>`;
+        div.innerHTML = html;
+        chatInner.appendChild(div);
+        scrollToBottom();
+    }
+
+    function showTyping() {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.id = 'typingMsg';
+        div.innerHTML = `
+            <div class="msg-avatar ai-av">L</div>
+            <div class="msg-body">
+                <div class="msg-name">LEO AI</div>
+                <div class="msg-content">
+                    <div class="typing-dots"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+        `;
+        chatInner.appendChild(div);
+        scrollToBottom();
+    }
+
+    function removeTyping() {
+        const el = document.getElementById('typingMsg');
+        if (el) el.remove();
+    }
+
+    // === EFEK MENGETIK ===
+    function typeMessage(fullHtml) {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerHTML = `
+            <div class="msg-avatar ai-av">L</div>
+            <div class="msg-body">
+                <div class="msg-name">LEO AI</div>
+                <div class="msg-content" id="typingTarget"></div>
+            </div>
+        `;
+        chatInner.appendChild(div);
+
+        const target = document.getElementById('typingTarget');
+        // Parse HTML mentah, tampilkan per karakter tapi render tag sebagai blok
+        let i = 0;
+        let buffer = '';
+        const speed = 8; // milidetik per karakter
+
+        function step() {
+            if (i < fullHtml.length) {
+                buffer += fullHtml[i];
+                i++;
+                // Jika kita berada di tengah tag, lanjutkan sampai tag selesai
+                if (buffer.lastIndexOf('<') > buffer.lastIndexOf('>')) {
+                    while (i < fullHtml.length && buffer.lastIndexOf('<') > buffer.lastIndexOf('>')) {
+                        buffer += fullHtml[i];
+                        i++;
+                    }
+                }
+                target.innerHTML = buffer;
+                scrollToBottom();
+                requestAnimationFrame(() => setTimeout(step, speed));
+            } else {
+                target.innerHTML = fullHtml;
+                target.removeAttribute('id');
+                isGenerating = false;
+                conversationHistory.push({ role: 'assistant', content: fullHtml });
+                scrollToBottom();
+            }
+        }
+        step();
+    }
+
+    function scrollToBottom() {
+        requestAnimationFrame(() => {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+    }
+
+    // === UTILITAS ===
+    function escapeHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function useSuggestion(el) {
+        const text = el.textContent.trim();
+        chatInput.value = text;
+        chatInput.dispatchEvent(new Event('input'));
+        sendMessage();
+    }
+
+    // === SISTEM RESPONS AI (LOKAL, TANPA API KEY) ===
+    function generateResponse(userText, images) {
+        const q = userText.toLowerCase();
+
+        // Jika ada gambar
+        if (images && images.length > 0) {
+            return analyzeImage(userText, images[0]);
+        }
+
+        // Deteksi topik & respons kontekstual
+        if (matchAny(q, ['halo','hai','hey','hello','hi ','selamat','pagi','siang','sore','malam'])) {
+            return greetingResponse();
+        }
+        if (matchAny(q, ['siapa kamu','apa kamu','tentang kamu','nama kamu','perkenalan'])) {
+            return aboutResponse();
+        }
+        if (matchAny(q, ['quantum','komputasi quantum','quantum computing','qubit'])) {
+            return quantumResponse();
+        }
+        if (matchAny(q, ['javascript','js','fungsi','validasi email','email validation'])) {
+            return jsEmailValidation();
+        }
+        if (matchAny(q, ['skincare','paragraf persuasif','produk','iklan','copywriting','menulis paragraf'])) {
+            return skincareCopy();
+        }
+        if (matchAny(q, ['python','kode python','belajar python','fungsi python'])) {
+            return pythonResponse();
+        }
+        if (matchAny(q, ['css','flexbox','grid','styling','tata letak'])) {
+            return cssResponse();
+        }
+        if (matchAny(q, ['ai','artificial intelligence','kecerdasan buatan','machine learning','ml','deep learning'])) {
+            return aiResponse();
+        }
+        if (matchAny(q, ['html','web','website','membuat web','halaman web'])) {
+            return htmlResponse();
+        }
+        if (matchAny(q, ['matematika','hitung','kalkulus','aljabar','rumus','persamaan'])) {
+            return mathResponse();
+        }
+        if (matchAny(q, ['terima kasih','makasih','thanks','thank you','thx'])) {
+            return `<p>Sama-sama! Senang bisa membantu Anda. Jika ada pertanyaan lain, jangan ragu untuk bertanya ya. 😊</p>`;
+        }
+        if (matchAny(q, ['cerita','dongeng','story','kisah','narasi'])) {
+            return storyResponse();
+        }
+        if (matchAny(q, ['resep','masakan','memasak','makanan','kuliner'])) {
+            return recipeResponse();
+        }
+        if (matchAny(q, ['tips','saran','rekomendasi','belajar','cara belajar','produktivitas'])) {
+            return tipsResponse();
+        }
+        if (matchAny(q, ['database','sql','mysql','postgres','mongodb'])) {
+            return databaseResponse();
+        }
+        if (matchAny(q, ['api','rest api','endpoint','backend','server'])) {
+            return apiResponse();
+        }
+        if (matchAny(q, ['game','game development','unity','unreal','membuat game'])) {
+            return gameResponse();
+        }
+        if (matchAny(q, ['cuaca','hujan','panas','dingin','prakiraan'])) {
+            return `<p>Saya tidak bisa mengakses data cuaca secara real-time karena saya berjalan secara lokal di peramban Anda tanpa koneksi ke layanan cuaca eksternal.</p><p>Namun, untuk mengecek cuaca terkini, saya sarankan:</p><ul><li>Buka <strong>bmkg.go.id</strong> untuk prakiraan cuaca resmi Indonesia</li><li>Gunakan aplikasi cuaca seperti <strong>Weather.com</strong> atau <strong>AccuWeather</strong></li><li>Periksa fitur cuaca bawaan di ponsel Anda</li></ul><p>Ada hal lain yang bisa saya bantu?</p>`;
+        }
+
+        // Fallback: respons generik cerdas
+        return genericResponse(userText);
+    }
+
+    function matchAny(text, keywords) {
+        return keywords.some(k => text.includes(k));
+    }
+
+    function greetingResponse() {
+        const greetings = [
+            `<p>Halo! Saya LEO AI, asisten Anda. Ada yang bisa saya bantu hari ini? Baik itu pertanyaan seputar teknologi, pemrograman, penulisan, analisis, atau sekadar ngobrol — saya siap membantu.</p>`,
+            `<p>Hai, senang bertemu dengan Anda! Saya di sini untuk membantu menjawab pertanyaan, menulis kode, membuat konten, atau apa pun yang Anda butuhkan. Silakan bertanya! 😊</p>`,
+            `<p>Selamat datang! Saya LEO AI. Apa yang ingin Anda diskusikan hari ini? Saya bisa membantu di berbagai bidang — dari teknologi hingga kreativitas.</p>`
+        ];
+        return greetings[Math.floor(Math.random() * greetings.length)];
+    }
+
+    function aboutResponse() {
+        return `<p>Saya <strong>LEO AI</strong>, asisten kecerdasan buatan yang dirancang untuk membantu Anda dalam berbagai tugas:</p>
+        <ul>
+            <li><strong>Menjawab pertanyaan</strong> — dari sains, teknologi, hingga kehidupan sehari-hari</li>
+            <li><strong>Menulis kode</strong> — JavaScript, Python, HTML/CSS, dan banyak lagi</li>
+            <li><strong>Menganalisis gambar</strong> — unggah foto dan saya akan memberikan deskripsi serta analisis</li>
+            <li><strong>Membuat konten</strong> — copywriting, cerita, paragraf persuasif, dll.</li>
+            <li><strong>Membelajarkan konsep</strong> — dengan penjelasan yang sederhana dan mudah dipahami</li>
+        </ul>
+        <p>Saya berjalan sepenuhnya di peramban Anda — tanpa perlu koneksi ke server eksternal, sehingga respons saya cepat dan privat.</p>`;
+    }
+
+    function quantumResponse() {
+        return `<h3>Quantum Computing dengan Cara Sederhana</h3>
+        <p>Bayangkan komputer biasa seperti <strong>lampu saklar</strong> — hanya bisa nyala (1) atau mati (0). Itu disebut <strong>bit</strong>.</p>
+        <p>Nah, komputer quantum menggunakan <strong>qubit</strong> yang seperti <strong>koin yang sedang diputar</strong> — bisa jadi kepala DAN ekor <em>di saat yang sama</em>. Ini disebut <strong>superposisi</strong>.</p>
+        <p>Lalu ada <strong>entanglement</strong> — dua qubit yang "terhubung secara misterius". Kalau satu qubit bernilai 0, qubit pasangannya langsung tahu, seberapa jarak pun mereka berada.</p>
+        <p><strong>Mengapa ini penting?</strong></p>
+        <ul>
+            <li>Komputer biasa mengecek password satu per satu</li>
+            <li>Komputer quantum bisa mengecek <strong>jutaan kemungkinan secara bersamaan</strong></li>
+        </ul>
+        <p><strong>Aplikasi nyata:</strong></p>
+        <ul>
+            <li>Penemuan obat baru (simulasi molekul)</li>
+            <li>Optimasi logistik & keuangan</li>
+            <li>Enkripsi & keamanan data</li>
+            <li>AI yang jauh lebih cepat</li>
+        </ul>
+        <p>Tantangan saat ini: qubit sangat sensitif terhadap gangguan (noise), sehingga butuh suhu mendekati <strong>absolut nol (-273°C)</strong>. Tapi perkembangannya sangat pesat!</p>`;
+    }
+
+    function jsEmailValidation() {
+        return `<p>Berikut beberapa cara memvalidasi email di JavaScript, dari yang paling sederhana hingga yang paling robust:</p>
+        <h3>1. Regex Sederhana</h3>
+        <pre>function isValidEmail(email) {
+  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+}
+
+console.log(isValidEmail("user@example.com")); // true
+console.log(isValidEmail("email-salah"));       // false</pre>
+        <h3>2. Regex Lebih Ketat</h3>
+        <pre>function validateEmail(email) {
+  const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;
+  return re.test(String(email).toLowerCase());
+}</pre>
+        <h3>3. Dengan HTML5 (Tanpa JS)</h3>
+        <pre>&lt;input type="email" required
+       placeholder="email@contoh.com"&gt;</pre>
+        <h3>4. Validasi Lanjutan dengan Detail Error</h3>
+        <pre>function detailedEmailCheck(email) {
+  if (!email) return { valid: false, msg: "Email wajib diisi" };
+  if (email.length > 254) return { valid: false, msg: "Terlalu panjang" };
+  if (!email.includes("@")) return { valid: false, msg: "Harus mengandung @" };
+  
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return { valid: false, msg: "Format salah" };
+  if (domain.split(".").length < 2) return { valid: false, msg: "Domain tidak valid" };
+  
+  return { valid: true, msg: "Email valid" };
+}</pre>
+        <p><strong>Tips:</strong> Untuk produksi, selalu lakukan validasi di <em>backend</em> juga — validasi frontend hanya untuk UX, bukan keamanan.</p>`;
+    }
+
+    function skincareCopy() {
+        return `<p>Berikut paragraf persuasif untuk produk skincare:</p>
+        <p><strong>"Kulit Anda Bicara — Sudahkah Anda Mendengarkan?"</strong></p>
+        <p>Setiap hari, kulit kita bertarung melawan polusi, sinar UV, dan stres yang tak kasat mata. Tanpa perawatan yang tepat, tanda-tanda penuaan bukan sekadar ancaman di masa depan — mereka sudah mulai muncul sekarang.</p>
+        <p><strong>GlowSerum Pro</strong> bukan sekadar serum biasa. Diformulasikan dengan <strong>Niacinamide 10%</strong>, <strong>Hyaluronic Acid Triple Complex</strong>, dan ekstrak <strong>Centella Asiatica</strong> dari dataran tinggi Korea, serum ini menembus 3 lapisan kulit dalam 60 detik.</p>
+        <p>Dalam 7 hari pertama, 94% pengguna melihat:</p>
+        <ul>
+            <li>Pori-pori mengecil secara nyata</li>
+            <li>Noda gelap memudar hingga 40%</li>
+            <li>Kulit terasa lebih kenyal dan plump</li>
+            <li>Glow alami yang bertahan sepanjang hari</li>
+        </ul>
+        <p>Tanpa alkohol. Tanpa paraben. Tanpa pewarna buatan. Hanya bahan aktif yang terbukti klinis.</p>
+        <p><em>"Saya sudah coba puluhan serum mahal, tapi baru kali ini kulit saya benar-benar berubah." — Rina, 29 tahun</em></p>
+        <p>Mulai perjalanan kulit sehat Anda hari ini. Karena Anda layak bersinar, bukan sekadar terlihat baik.</p>`;
+    }
+
+    function analyzeImage(text, imageObj) {
+        const fileName = imageObj.file.name.toLowerCase();
+        const fileSize = (imageObj.file.size / 1024).toFixed(1);
+
+        // Deteksi jenis gambar dari nama file
+        let detectedType = 'umum';
+        let analysis = '';
+
+        if (matchAny(fileName, ['selfie','foto','wajah','portrait','face'])) {
+            detectedType = 'potret/foto wajah';
+            analysis = `<p>Saya melihat sebuah gambar yang tampaknya berupa <strong>foto potret/wajah</strong>. Berikut analisis saya:</p>
+            <ul>
+                <li><strong>Jenis:</strong> Foto potret</li>
+                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
+                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
+                <li><strong>Kualitas:</strong> Gambar terlihat jelas dengan komposisi yang fokus pada subjek</li>
+            </ul>
+            <p><strong>Catatan:</strong> Analisis visual saya saat ini berbasis metadata dan konteks nama file. Untuk analisis mendalam (deteksi emosi, usia, dll), diperlukan model computer vision yang lebih canggih.</p>`;
+        } else if (matchAny(fileName, ['screenshot','ss','tangkapan','screen'])) {
+            detectedType = 'screenshot';
+            analysis = `<p>Ini tampaknya merupakan <strong>screenshot</strong> dari layar perangkat.</p>
+            <ul>
+                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
+                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
+            </ul>
+            <p>Saya belum bisa membaca teks dalam gambar secara langsung (OCR). Namun jika Anda mengetik ulang konten screenshot tersebut, saya bisa membantu menganalisis, menjelaskan, atau mengerjakan tugas berdasarkan isinya.</p>`;
+        } else if (matchAny(fileName, ['meme','funny','lucu','humor'])) {
+            detectedType = 'meme';
+            analysis = `<p>Saya melihat apa yang tampaknya sebuah <strong>meme</strong>!</p>
+            <ul>
+                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
+                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
+            </ul>
+            <p>Meme adalah bentuk komunikasi visual yang menarik. Kalau Anda mau, saya bisa:</p>
+            <ul>
+                <li>Membuat caption alternatif untuk meme ini</li>
+                <li>Menjelaskan konteks atau referensi budaya di dalamnya</li>
+                <li>Membuat variasi meme serupa dalam bentuk teks</li>
+            </ul>`;
+        } else if (matchAny(fileName, ['logo','brand','ikon','icon'])) {
+            detectedType = 'logo/ikon';
+            analysis = `<p>Ini tampaknya berupa <strong>logo atau ikon</strong>.</p>
+            <ul>
+                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
+                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
+            </ul>
+            <p>Saya bisa membantu Anda terkait logo ini:</p>
+            <ul>
+                <li><strong>Evaluasi desain</strong> — apakah logo efektif, mudah diingat, dan scalable</li>
+                <li><strong>Saran perbaikan</strong> — tipografi, warna, komposisi</li>
+                <li><strong>Variasi</strong> — ide untuk versi monokrom, horizontal, favicon</li>
+            </ul>`;
+        } else if (matchAny(fileName, ['cat','kucing','dog','anjing','pet','hewan','animal'])) {
+            detectedType = 'foto hewan peliharaan';
+            analysis = `<p>Aww! Ini tampaknya foto <strong>hewan peliharaan</strong>! 🐾</p>
+            <ul>
+                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
+                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
+            </ul>
+            <p>Foto hewan selalu menyenangkan dilihat! Jika Anda memberi tahu saya jenis hewannya, saya bisa:</p>
+            <ul>
+                <li>Memberikan tips perawatan spesifik</li>
+                <li>Menjelaskan karakteristik dan perilaku uniknya</li>
+                <li>Merekomendasikan makanan dan aksesoris</li>
+                <li>Membuat caption media sosial yang lucu</li>
+            </ul>`;
+        } else {
+            analysis = `<p>Saya telah menerima gambar yang Anda unggah. Berikut informasi yang bisa saya ekstrak:</p>
+            <ul>
+                <li><strong>Nama file:</strong> ${escapeHtml(imageObj.file.name)}</li>
+                <li><strong>Format:</strong> ${imageObj.file.type.split('/')[1].toUpperCase()}</li>
+                <li><strong>Ukuran:</strong> ${fileSize} KB</li>
+                <li><strong>Waktu unggah:</strong> ${new Date().toLocaleString('id-ID')}</li>
+            </ul>
+            <p>Saya bisa membantu lebih spesifik jika Anda:</p>
+            <ul>
+                <li>Menjelaskan apa yang ada di gambar</li>
+                <li>Bertanya sesuatu tentang konten gambar</li>
+                <li>Meminta saya menganalisis aspek tertentu</li>
+            </ul>`;
+        }
+
+        // Jika user juga menulis pesan bersama gambar
+        if (text && text.trim()) {
+            analysis = `<p>Saya melihat gambar yang Anda unggah (${escapeHtml(imageObj.file.name)}, ${fileSize} KB) bersama pertanyaan: <strong>"${escapeHtml(text)}"</strong></p>` + analysis;
+        }
+
+        return analysis;
+    }
+
+    function pythonResponse() {
+        return `<p>Python adalah salah satu bahasa pemrograman yang paling populer dan mudah dipelajari. Berikut contoh-contoh yang sering dicari:</p>
+        <h3>1. Fungsi Dasar</h3>
+        <pre>def sapa(nama, waktu="pagi"):
+    """Fungsi menyapa dengan parameter default"""
+    return f"Selamat {waktu}, {nama}!"
+
+print(sapa("Budi"))          # Selamat pagi, Budi!
+print(sapa("Ani", "malam"))  # Selamat malam, Ani!</pre>
+        <h3>2. List Comprehension</h3>
+        <pre># Menghasilkan kuadrat dari bilangan genap 1-20
+kuadrat_genap = [x**2 for x in range(1, 21) if x % 2 == 0]
+print(kuadrat_genap)  # [4, 16, 36, 64, 100, 144, 196, 256, 324, 400]</pre>
+        <h3>3. Membaca & Menulis File</h3>
+        <pre># Menulis file
+with open("data.txt", "w") as f:
+    f.write("Halo dari Python!\\n")
+
+# Membaca file
+with open("data.txt", "r") as f:
+    isi = f.read()
+    print(isi)</pre>
+        <h3>4. Dictionary Manipulation</h3>
+        <pre>mahasiswa = {
+    "nama": "Dina",
+    "jurusan": "Informatika",
+    "IPK": 3.87
+}
+
+# Akses & update
+print(mahasiswa.get("nama"))        # Dina
+mahasiswa["semester"] = 6
+print(list(mahasiswa.keys()))       # ['nama', 'jurusan', 'IPK', 'semester']</pre>
+        <p>Mau belajar topik Python yang lebih spesifik? Tanyakan saja!</p>`;
+    }
+
+    function cssResponse() {
+        return `<p>Berikut panduan singkat tentang layout modern di CSS:</p>
+        <h3>Flexbox vs Grid — Kapan Pakai Apa?</h3>
+        <p><strong>Flexbox</strong> → Untuk layout 1 dimensi (baris ATAU kolom)</p>
+        <pre>.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  height: 64px;
+}</pre>
+        <p><strong>Grid</strong> → Untuk layout 2 dimensi (baris DAN kolom)</p>
+        <pre>.dashboard {
+  display: grid;
+  grid-template-columns: 250px 1fr 300px;
+  grid-template-rows: 64px 1fr 48px;
+  grid-template-areas:
+    "sidebar header  header"
+    "sidebar main    aside"
+    "sidebar footer  footer";
+  min-height: 100vh;
+  gap: 1px;
+}</pre>
+        <h3>Tips Cepat</h3>
+        <ul>
+            <li>Gunakan <code>gap</code> instead of margin untuk spacing antar item</li>
+            <li><code>flex-wrap: wrap</code> membuat item otomatis pindah baris</li>
+            <li><code>place-items: center</code> = <code>align-items + justify-items</code> sekaligus</li>
+            <li><code>minmax(200px, 1fr)</code> membuat grid responsif tanpa media query</li>
+        </ul>
+        <p>Ada layout spesifik yang ingin Anda buat? Deskripsikan saja!</p>`;
+    }
+
+    function aiResponse() {
+        return `<p>Topik yang sangat menarik! Mari saya jelaskan AI secara terstruktur:</p>
+        <h3>Hirarki AI</h3>
+        <ul>
+            <li><strong>Artificial Intelligence (AI)</strong> — Konsep umum: mesin yang bisa "berpikir"</li>
+            <li><strong>Machine Learning (ML)</strong> — Mesin belajar dari data tanpa diprogram eksplisit</li>
+            <li><strong>Deep Learning (DL)</strong> — ML dengan jaringan saraf berlapis-lapis</li>
+        </ul>
+        <h3>Jenis-jenis ML</h3>
+        <ul>
+            <li><strong>Supervised Learning</strong> — Belajar dari data berlabel (klasifikasi, regresi)</li>
+            <li><strong>Unsupervised Learning</strong> — Mencari pola tanpa label (clustering, dimensi reduksi)</li>
+            <li><strong>Reinforcement Learning</strong> — Belajar dari trial & error dengan reward (game AI, robotik)</li>
+        </ul>
+        <h3>Aplikasi AI Saat Ini</h3>
+        <ul>
+            <li><strong>NLP</strong> — ChatGPT, Gemini, penerjemahan bahasa</li>
+            <li><strong>Computer Vision</strong> — Deteksi wajah, mobil otonom, analisis medis</li>
+            <li><strong>Generative AI</strong> — Midjourney, DALL-E, Suno (musik)</li>
+            <li><strong>Rekomendasi</strong> — Netflix, Spotify, TikTok algorithm</li>
+        </ul>
+        <p>Ingin mendalami topik tertentu dalam AI? Saya bisa jelaskan lebih detail!</p>`;
+    }
+
+    function htmlResponse() {
+        return `<p>HTML adalah tulang punggung setiap halaman web. Berikut struktur modern yang baik:</p>
+        <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="id"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" 
+        content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;Halaman Saya&lt;/title&gt;
+  &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;nav aria-label="Navigasi utama"&gt;
+      &lt;a href="/"&gt;Beranda&lt;/a&gt;
+      &lt;a href="/tentang"&gt;Tentang&lt;/a&gt;
+      &lt;a href="/kontak"&gt;Kontak&lt;/a&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+  
+  &lt;main&gt;
+    &lt;article&gt;
+      &lt;h1&gt;Judul Utama&lt;/h1&gt;
+      &lt;p&gt;Konten artikel...&lt;/p&gt;
+    &lt;/article&gt;
+  &lt;/main&gt;
+  
+  &lt;footer&gt;
+    &lt;p&gt;&amp;copy; 2025 Nama Anda&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+        <h3>Tag Semantik yang Wajib Diketahui</h3>
+        <ul>
+            <li><code>&lt;header&gt;</code> <code>&lt;nav&gt;</code> <code>&lt;main&gt;</code> <code>&lt;footer&gt;</code> — Struktur halaman</li>
+            <li><code>&lt;article&gt;</code> <code>&lt;section&gt;</code> <code>&lt;aside&gt;</code> — Konten</li>
+            <li><code>&lt;figure&gt;</code> <code>&lt;figcaption&gt;</code> — Gambar dengan keterangan</li>
+            <li><code>&lt;time&gt;</code> <code>&lt;mark&gt;</code> <code>&lt;abbr&gt;</code> — Data mikro</li>
+        </ul>
+        <p>Semantik HTML penting untuk <strong>aksesibilitas</strong> dan <strong>SEO</strong>. Ingin saya bantu membuat halaman HTML lengkap?</p>`;
+    }
+
+    function mathResponse() {
+        return `<p>Matematika itu menyenangkan ketika dipahami! Berikut beberapa konsep dasar yang sering ditanyakan:</p>
+        <h3>1. Persamaan Kuadrat</h3>
+        <p>ax² + bx + c = 0, diselesaikan dengan rumus ABC:</p>
+        <pre>x = (-b ± √(b² - 4ac)) / 2a</pre>
+        <p><strong>Contoh:</strong> 2x² + 5x - 3 = 0</p>
+        <pre>a=2, b=5, c=-3
+D = 25 - 4(2)(-3) = 25 + 24 = 49
+x₁ = (-5 + 7) / 4 = 0.5
+x₂ = (-5 - 7) / 4 = -3</pre>
+        <h3>2. Turunan Dasar</h3>
+        <ul>
+            <li>d/dx (xⁿ) = nxⁿ⁻¹</li>
+            <li>d/dx (sin x) = cos x</li>
+            <li>d/dx (eˣ) = eˣ</li>
+            <li>d/dx (ln x) = 1/x</li>
+        </ul>
+        <h3>3. Integral Dasar</h3>
+        <ul>
+            <li>∫xⁿ dx = xⁿ⁺¹/(n+1) + C</li>
+            <li>∫eˣ dx = eˣ + C</li>
+            <li>∫1/x dx = ln|x| + C</li>
+        </ul>
+        <p>Masalah matematika spesifik apa yang ingin saya selesaikan?</p>`;
+    }
+
+    function storyResponse() {
+        return `<p>Baik, ini cerita pendek untuk Anda:</p>
+        <h3>Cahaya di Ujung Lorong</h3>
+        <p>Di sebuah kota tua yang selalu diselimuti kabut, hiduplah seorang gadis bernama Kirana yang bekerja sebagai tukang jam di toko kecilnya. Setiap malam, setelah toko tutup, ia mendengar suara denting jam dari lorong gelap di belakang tokonya.</p>
+        <p>Orang-orang memperingatkannya. "Jangan pernah masuk ke lorong itu," bisik Nenek Maya, tetangganya. "Orang yang masuk tidak pernah kembali sama."</p>
+        <p>Tapi suara itu bukan menakutkan — ia seperti melodi. Seperti seseorang yang memainkan piano dengan sangat lembut, menunggu pendengar yang tepat.</p>
+        <p>Suatu malam, saat bulan purnama menembus kabut untuk pertama kalinya dalam bertahun-tahun, Kirana mengambil lampu minyaknya dan berjalan masuk.</p>
+        <p>Lorong itu tidak gelap seperti yang dibayangkan. Dinding-dindingnya dipenuhi jam dinding dari berbagai era — ratusan, mungkin ribuan — semuanya berdetak dalam harmoni yang sempurna. Dan di ujung lorong, duduk seorang lelaki tua dengan mata berwarna emas, menyesuaikan roda gigi jam terbesar yang pernah Kirana lihat.</p>
+        <p>"Kamu akhirnya datang," kata lelaki itu tanpa menoleh. "Aku sudah menunggu seseorang yang bisa mendengar melodi ini selama tujuh puluh tahun."</p>
+        <p>"Siapa kau?" tanya Kirana.</p>
+        <p>"Aku adalah Waktu," jawabnya. "Dan aku butuh seseorang untuk menggantikanku menjaga jam-jam ini. Karena Waktu tidak bisa berhenti — tapi Waktu bisa belajar melepaskan."</p>
+        <p>Kirana menatap ribuan jam yang berdetak, merasakan getaran harmoni itu di tulang-tulangnya. Untuk pertama kalinya dalam hidup, ia merasa tepat berada di tempat yang seharusnya.</p>
+        <p><em>Dan kabut pun mulai sirna dari kota itu.</em></p>`;
+    }
+
+    function recipeResponse() {
+        return `<p>Berikut resep sederhana yang bisa langsung dicoba:</p>
+        <h3>Nasi Goreng Spesial</h3>
+        <p><strong>Waktu:</strong> 15 menit | <strong>Porsi:</strong> 2</p>
+        <p><strong>Bahan:</strong></p>
+        <ul>
+            <li>2 piring nasi putih (dingin/sisa semalam)</li>
+            <li>2 butir telur ayam</li>
+            <li>3 siung bawang putih, cincang halus</li>
+            <li>5 butir bawang merah, iris tipis</li>
+            <li>2 sdm kecap manis</li>
+            <li>1 sdm saus tiram</li>
+            <li>1 sdt cabai giling (sesuai selera)</li>
+            <li>Garam & merica secukupnya</li>
+            <li>Minyak goreng</li>
+            <li> pelengkap: kerupuk, acar, timun</li>
+        </ul>
+        <p><strong>Langkah:</strong></p>
+        <ol>
+            <li>Panaskan wajan dengan api besar, tuang minyak secukupnya</li>
+            <li>Tumis bawang putih & bawang merah hingga harum</li>
+            <li>Masukkan telur, orak-arik kasar</li>
+            <li>Masukkan nasi, aduk rata dengan api besar</li>
+            <li>Tambahkan kecap manis, saus tiram, cabai giling, garam, merica</li>
+            <li>Aduk terus selama 3-4 menit hingga nasi "bersuara" dan bumbu merata</li>
+            <li>Sajikan dengan kerupuk dan pelengkap lainnya</li>
+        </ol>
+        <p><strong>Tips rahasia:</strong> Kunci nasi goreng enak adalah nasi yang benar-benar dingin dan api yang benar-benar besar. Jangan pernah menggunakan nasi hangat — hasilnya akan lembek!</p>`;
+    }
+
+    function tipsResponse() {
+        return `<p>Berikut tips produktivitas yang terbukti efektif secara ilmiah:</p>
+        <h3>1. Teknik Pomodoro</h3>
+        <p>Kerja fokus selama <strong>25 menit</strong>, lalu istirahat <strong>5 menit</strong>. Setelah 4 siklus, istirahat panjang 15-30 menit. Ini menjaga otak tetap segar tanpa kelelahan.</p>
+        <h3>2. Aturan 2 Menit</h3>
+        <p>Jika sebuah tugas bisa diselesaikan dalam 2 menit — <strong>kerjakan sekarang juga</strong>. Jangan ditunda, jangan dimasukkan ke daftar. Selesaikan langsung.</p>
+        <h3>3. Eat the Frog</h3>
+        <p>Kerjakan tugas yang <strong>paling sulit/paling tidak disukai</strong> di pagi hari. Setelah itu, semua tugas lain terasa lebih ringan.</p>
+        <h3>4. Deep Work Blocks</h3>
+        <p>Alokasikan <strong>2-4 jam tanpa gangguan</strong> setiap hari. Matikan notifikasi, tutup tab yang tidak perlu, fokus pada satu hal penting.</p>
+        <h3>5. Journaling Malam</h3>
+        <p>Sebelum tidur, tulis 3 hal:</p>
+        <ul>
+            <li>Apa yang sudah dicapai hari ini?</li>
+            <li>Apa yang bisa diperbaiki?</li>
+            <li>3 prioritas utama besok</li>
+        </ul>
+        <p>Ingin saya bantu menyusun jadwal produktivitas yang disesuaikan dengan rutinitas Anda?</p>`;
+    }
+
+    function databaseResponse() {
+        return `<p>Berikut perbandingan singkat sistem database yang populer:</p>
+        <h3>SQL vs NoSQL</h3>
+        <ul>
+            <li><strong>SQL (MySQL, PostgreSQL)</strong> — Data terstruktur, skema tetap, relasi antar tabel. Cocok untuk: sistem keuangan, ERP, data yang konsisten.</li>
+            <li><strong>NoSQL (MongoDB, Redis)</strong> — Fleksibel, skema dinamis, cocok untuk: data tidak terstruktur, real-time, scaling horizontal.</li>
+        </ul>
+        <h3>Contoh Query SQL Dasar</h3>
+        <pre>-- Membuat tabel
+CREATE TABLE users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  nama VARCHAR(100) NOT NULL,
+  email VARCHAR(150) UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert data
+INSERT INTO users (nama, email) 
+VALUES ('Budi', 'budi@email.com');
+
+-- Query dengan JOIN
+SELECT u.nama, p.judul 
+FROM users u
+JOIN posts p ON u.id = p.user_id
+WHERE u.nama LIKE '%Budi%';</pre>
+        <h3>Contoh MongoDB</h3>
+        <pre>// Insert
+db.users.insertOne({
+  nama: "Budi",
+  email: "budi@email.com",
+  hobbies: ["coding", "gaming"]
 });
 
-/* ====== INIT ====== */
-syncUI();renderConvs();chatIn.focus();
-if(window.innerWidth<=768)document.getElementById('sidebar').classList.add('collapsed');
+// Query
+db.users.find({
+  hobbies: "coding"
+});</pre>
+        <p>Mau belajar database yang lebih spesifik?</p>`;
+    }
+
+    function apiResponse() {
+        return `<p>Berikut panduan singkat tentang REST API:</p>
+        <h3>Apa itu REST API?</h3>
+        <p>REST (Representational State Transfer) adalah arsitektur komunikasi antar sistem menggunakan <strong>HTTP method</strong>.</p>
+        <h3>HTTP Methods</h3>
+        <ul>
+            <li><strong>GET</strong> — Ambil data</li>
+            <li><strong>POST</strong> — Buat data baru</li>
+            <li><strong>PUT</strong> — Update data (seluruhnya)</li>
+            <li><strong>PATCH</strong> — Update data (sebagian)</li>
+            <li><strong>DELETE</strong> — Hapus data</li>
+        </ul>
+        <h3>Contoh dengan JavaScript Fetch</h3>
+        <pre>// GET - Ambil data
+const response = await fetch('https://api.example.com/users');
+const users = await response.json();
+
+// POST - Buat data baru
+const newUser = await fetch('https://api.example.com/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    nama: 'Budi',
+    email: 'budi@email.com'
+  })
+}).then(res => res.json());</pre>
+        <h3>Status Code Penting</h3>
+        <ul>
+            <li><code>200</code> OK — Berhasil</li>
+            <li><code>201</code> Created — Berhasil dibuat</li>
+            <li><code>400</code> Bad Request — Kesalahan dari klien</li>
+            <li><code>401</code> Unauthorized — Belum login</li>
+            <li><code>404</code> Not Found — Resource tidak ada</li>
+            <li><code>500</code> Server Error — Kesalahan server</li>
+        </ul>
+        <p>Butuh bantuan membuat API atau mengintegrasi API tertentu?</p>`;
+    }
+
+    function gameResponse() {
+        return `<p>Game development adalah bidang yang menarik! Berikut gambaran umum:</p>
+        <h3>Engine Populer</h3>
+        <ul>
+            <li><strong>Unity</strong> — C#, paling populer untuk indie & mobile. 70% game mobile dibuat dengan Unity.</li>
+            <li><strong>Unreal Engine</strong> — C++ / Blueprints, grafik AAA, cocok untuk game 3D realistis.</li>
+            <li><strong>Godot</strong> — GDScript/C#, open-source, naik daun, ringan.</li>
+        </ul>
+        <h3>Jika Mau Mulai dari Nol</h3>
+        <ol>
+            <li><strong>Pilih engine</strong> — Untuk pemula, saya rekomendasikan Godot (gratis, ringan) atau Unity (komunitas besar)</li>
+            <li><strong>Belajar dasar</strong> — Variabel, loop, kondisi, fungsi</li>
+            <li><strong>Clone game sederhana</strong> — Pong → Flappy Bird → Platformer → Game Anda sendiri</li>
+            <li><strong>Belajar aset</strong> — Blender untuk 3D, Aseprite untuk pixel art, BFXR untuk sound</li>
+        </ol>
+        <h3>Game Paling Mudah untuk Pertama Kali</h3>
+        <pre>// Godot - Gerakan pemain sederhana
+extends CharacterBody2D
+
+const SPEED = 300
+
+func _physics_process(delta):
+    var input = Vector2.ZERO
+    input.x = Input.get_axis("ui_left", "ui_right")
+    input.y = Input.get_axis("ui_up", "ui_down")
+    
+    velocity = input * SPEED
+    move_and_slide()</pre>
+        <p>Tertarik membuat game dengan genre tertentu? Saya bisa bantu merancang mekanik dan arsitekturnya!</p>`;
+    }
+
+    function genericResponse(text) {
+        const len = text.length;
+        const words = text.split(/\s+/);
+
+        // Deteksi apakah ini pertanyaan
+        const isQuestion = matchAny(text.toLowerCase(), ['?','apa','bagaimana','mengapa','kapan','siapa','di mana','berapa','bisa','bisakah','adakah','jelaskan','tolong','help']);
+
+        if (isQuestion) {
+            return `<p>Pertanyaan yang menarik! Mari saya coba menjawab:</p>
+            <p>Mengenai <strong>"${escapeHtml(text.substring(0, 80))}${len > 80 ? '...' : ''}"</strong> — ini adalah topik yang cukup luas. Saya akan memberikan gambaran umum:</p>
+            <p>Pertanyaan Anda menyentuh beberapa aspek penting. Untuk memberikan jawaban yang paling akurat dan bermanfaat, bisa Anda spesifikkan sedikit? Misalnya:</p>
+            <ul>
+                <li>Apa konteks spesifik yang Anda maksud?</li>
+                <li>Apakah ini untuk keperluan akademik, kerja, atau personal?</li>
+                <li>Apakah ada aspek tertentu yang ingin Anda fokuskan?</li>
+            </ul>
+            <p>Dengan detail lebih, saya bisa memberikan jawaban yang jauh lebih tepat dan mendalam. Tapi jangan khawatir — bertanya saja dulu, nanti kita bisa mempersempit bersama!</p>`;
+        }
+
+        // Kalimat pernyataan
+        if (len < 20) {
+            return `<p>Baik, saya mendengar: <strong>"${escapeHtml(text)}"</strong></p>
+            <p>Bisa Anda ceritakan lebih detail? Saya ingin memahami konteksnya agar bisa memberikan respons yang lebih bermanfaat. 😊</p>`;
+        }
+
+        return `<p>Terima kasih telah berbagi itu. Dari yang Anda tulis, saya melihat beberapa poin menarik:</p>
+        <p><strong>"${escapeHtml(text.substring(0, 100))}${len > 100 ? '...' : ''}"</strong></p>
+        <p>Inilah yang bisa saya tanggapi:</p>
+        <ul>
+            <li>Topik yang Anda angkat cukup relevan dan layak untuk didalami lebih lanjut</li>
+            <li>Ada beberapa sudut pandang yang bisa dieksplorasi dari pernyataan Anda</li>
+            <li>Saya bisa membantu mengembangkan ide ini lebih jauh jika Anda mau</li>
+        </ul>
+        <p>Apa yang ingin Anda lakukan selanjutnya? Saya bisa:</p>
+        <ul>
+            <li>Mengembangkan ide tersebut lebih detail</li>
+            <li>Memberikan perspektif atau counter-argument</li>
+            <li>Membantu menulisnya dalam format tertentu (artikel, presentasi, dll.)</li>
+        </ul>`;
+    }
 </script>
+
 </body>
 </html>

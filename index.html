@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEO AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Söhne:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg:#fff;--bg2:#f7f7f8;--bg3:#f0f0f0;--bg-hover:#ececec;--bg-active:#e3e3e3;
+            --border:#e5e5e5;--fg:#1a1a1a;--fg2:#6e6e6e;--fg3:#999;
+            --accent:#10a37f;--accent2:#0d8c6d;--code-bg:#1e1e1e;
+            --sidebar-w:260px;
+            --shadow:0 2px 8px rgba(0,0,0,.08);
+        }
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Söhne',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--fg);height:100vh;overflow:hidden;display:flex}
+
+        /* ===== SIDEBAR ===== */
+        .sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s}
+        .sidebar.collapsed{transform:translateX(calc(-1*var(--sidebar-w)));opacity:0;position:absolute;height:100%}
+        .sb-head{padding:12px}
+        .new-chat{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--fg);font-size:14px;font-weight:500;cursor:pointer;transition:background .15s;font-family:inherit;width:100%}
+        .new-chat:hover{background:var(--bg-hover)}
+        .sb-search{padding:0 12px 8px}
+        .sb-search input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--fg);outline:none;font-family:inherit;transition:border-color .2s}
+        .sb-search input:focus{border-color:var(--accent)}
+        .sb-list{flex:1;overflow-y:auto;padding:4px 8px;scrollbar-width:thin;scrollbar-color:#ccc transparent}
+        .sb-list::-webkit-scrollbar{width:4px}
+        .sb-list::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+        .sb-label{padding:8px 10px 4px;font-size:11px;font-weight:600;color:var(--fg3);text-transform:uppercase;letter-spacing:.5px}
+        .sb-item{display:flex;align-items:center;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--fg);transition:background .12s;gap:8px}
+        .sb-item:hover{background:var(--bg-hover)}
+        .sb-item.active{background:var(--bg-active)}
+        .sb-item .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .sb-item .a{display:none;gap:2px}
+        .sb-item:hover .a{display:flex}
+        .sb-item .a button{background:none;border:none;color:var(--fg2);cursor:pointer;padding:2px 5px;border-radius:4px;font-size:12px}
+        .sb-item .a button:hover{color:var(--fg);background:rgba(0,0,0,.05)}
+        .sb-foot{padding:12px;border-top:1px solid var(--border)}
+        .sb-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s}
+        .sb-user:hover{background:var(--bg-hover)}
+        .avatar-sm{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5b5b5b,#3a3a3a);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;flex-shrink:0}
+        .avatar-ai{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#10a37f,#0d8c6d);display:flex;align-items:center;justify-content:center}
+        .avatar-ai svg{width:16px;height:16px}
+
+        /* ===== MAIN ===== */
+        .main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+        .top-bar{display:flex;align-items:center;padding:10px 16px;gap:8px;flex-shrink:0}
+        .tb-btn{background:none;border:none;color:var(--fg2);cursor:pointer;padding:6px 8px;border-radius:6px;font-size:18px;transition:all .15s;display:flex;align-items:center}
+        .tb-btn:hover{background:var(--bg-hover);color:var(--fg)}
+        .model-label{font-size:15px;font-weight:600;cursor:default;user-select:none}
+        .spacer{flex:1}
+
+        /* ===== VIEW SYSTEM: chat dan settings bergantian ===== */
+        .view{flex:1;display:flex;flex-direction:column;min-height:0}
+        .view.hidden{display:none}
+
+        /* ===== SETTINGS VIEW (di dalam main, bukan overlay) ===== */
+        .settings-view{
+            flex:1;overflow-y:auto;background:var(--bg);
+            scrollbar-width:thin;scrollbar-color:#ddd transparent;
+        }
+        .settings-view::-webkit-scrollbar{width:5px}
+        .settings-view::-webkit-scrollbar-thumb{background:#ddd;border-radius:5px}
+
+        .set-head{
+            display:flex;align-items:center;gap:10px;padding:14px 24px;
+            border-bottom:1px solid var(--border);flex-shrink:0;
+            position:sticky;top:0;background:var(--bg);z-index:10;
+        }
+        .set-back{
+            display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;
+            border:1px solid var(--border);background:var(--bg);color:var(--fg);
+            font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit;
+            flex-shrink:0;
+        }
+        .set-back:hover{background:var(--bg-hover);border-color:#d0d0d0}
+        .set-back:active{transform:scale(.97)}
+        .set-back i{font-size:11px;color:var(--fg2)}
+        .set-title{font-size:15px;font-weight:600}
+
+        .set-body{padding:20px 24px;max-width:680px;margin:0 auto;width:100%}
+
+        .set-section{margin-bottom:26px}
+        .set-section-title{font-size:12px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+        .set-field{margin-bottom:16px}
+        .set-label{font-size:13.5px;font-weight:500;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
+        .set-label .val{font-weight:400;color:var(--accent);font-size:12.5px;font-family:'SF Mono','Fira Code',monospace}
+        .set-desc{font-size:12px;color:var(--fg3);margin-bottom:8px;line-height:1.5}
+
+        .set-select{
+            width:100%;padding:9px 36px 9px 12px;border:1px solid var(--border);border-radius:8px;
+            font-size:13.5px;font-family:inherit;background:var(--bg);color:var(--fg);
+            outline:none;cursor:pointer;transition:border-color .2s;appearance:none;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat:no-repeat;background-position:right 12px center;
+        }
+        .set-select:focus{border-color:var(--accent)}
+
+        .set-range{width:100%;height:5px;border-radius:3px;background:var(--bg3);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;margin-top:2px}
+        .set-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.18);cursor:pointer;transition:transform .15s}
+        .set-range::-webkit-slider-thumb:hover{transform:scale(1.15)}
+        .set-range::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.18);cursor:pointer}
+
+        .set-textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--fg);outline:none;resize:vertical;min-height:90px;line-height:1.5;transition:border-color .2s}
+        .set-textarea:focus{border-color:var(--accent)}
+
+        .set-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0}
+        .set-toggle-info{flex:1;margin-right:12px}
+        .set-toggle-label{font-size:13.5px;font-weight:500}
+        .set-toggle-desc{font-size:11.5px;color:var(--fg3);margin-top:1px}
+        .set-toggle{width:42px;height:24px;border-radius:12px;background:var(--bg-active);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+        .set-toggle.on{background:var(--accent)}
+        .set-toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform .2s}
+        .set-toggle.on::after{transform:translateX(18px)}
+
+        .set-chips{display:flex;flex-wrap:wrap;gap:6px}
+        .set-chip{padding:5px 13px;border-radius:18px;border:1px solid var(--border);background:var(--bg);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;color:var(--fg)}
+        .set-chip:hover{background:var(--bg-hover)}
+        .set-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+        .set-divider{height:1px;background:var(--border);margin:18px 0}
+        .set-reset{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--fg2);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
+        .set-reset:hover{background:var(--bg-hover);color:var(--fg)}
+
+        /* ===== CHAT VIEW ===== */
+        .chat-view{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+        .chat-view::-webkit-scrollbar{width:6px}
+        .chat-view::-webkit-scrollbar-thumb{background:#ddd;border-radius:6px}
+        .chat-view::-webkit-scrollbar-thumb:hover{background:#bbb}
+
+        .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:20px}
+        .leo-logo{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#10a37f,#0d8c6d);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(16,163,127,.35);animation:logoGlow 3s ease-in-out infinite}
+        @keyframes logoGlow{0%,100%{box-shadow:0 4px 24px rgba(16,163,127,.35)}50%{box-shadow:0 4px 36px rgba(16,163,127,.55)}}
+        .leo-logo svg{width:32px;height:32px}
+        .w-title{font-size:26px;font-weight:600}
+        .w-sub{font-size:15px;color:var(--fg2);text-align:center;max-width:480px;line-height:1.6}
+        .w-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(16,163,127,.08);border:1px solid rgba(16,163,127,.2);border-radius:20px;font-size:12.5px;color:var(--accent);font-weight:500}
+        .w-badge .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        .suggestions{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:600px;width:100%;margin-top:4px}
+        .sug-card{padding:14px 16px;border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;background:var(--bg)}
+        .sug-card:hover{background:var(--bg2);border-color:#d0d0d0;transform:translateY(-1px);box-shadow:0 1px 4px rgba(0,0,0,.05)}
+        .sug-title{font-size:13.5px;font-weight:500;margin-bottom:3px}
+        .sug-desc{font-size:12px;color:var(--fg3);line-height:1.4}
+
+        .msgs{max-width:768px;width:100%;margin:0 auto;padding:16px 24px;display:flex;flex-direction:column}
+        .msg{display:flex;gap:16px;padding:20px 0;animation:msgIn .3s ease-out}
+        @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .msg-body{flex:1;min-width:0}
+        .msg-role{font-size:13px;font-weight:600;margin-bottom:6px}
+        .msg-text{font-size:15px;line-height:1.7;word-wrap:break-word}
+        .msg-text p{margin-bottom:10px}
+        .msg-text p:last-child{margin-bottom:0}
+        .msg-text strong{font-weight:600}
+        .msg-text em{font-style:italic}
+        .msg-text code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:13px;font-family:'SF Mono','Fira Code',monospace;border:1px solid #eee}
+        .msg-text pre{background:var(--code-bg);border-radius:10px;padding:16px;overflow-x:auto;margin:12px 0;position:relative}
+        .msg-text pre code{background:none;border:none;padding:0;color:#e0e0e0;font-size:13px;line-height:1.6}
+        .copy-code{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.1);border:none;color:#aaa;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;font-family:inherit}
+        .copy-code:hover{background:rgba(255,255,255,.2);color:#fff}
+        .msg-text ul,.msg-text ol{padding-left:20px;margin:8px 0}
+        .msg-text li{margin-bottom:4px;line-height:1.6}
+        .msg-text table{border-collapse:collapse;margin:10px 0;font-size:13.5px;width:100%}
+        .msg-text th,.msg-text td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+        .msg-text th{background:var(--bg2);font-weight:600}
+        .msg-text h2{font-size:18px;font-weight:700;margin:16px 0 8px}
+        .msg-text h3{font-size:16px;font-weight:600;margin:14px 0 6px}
+        .msg-text h4{font-size:15px;font-weight:600;margin:12px 0 6px}
+        .msg-text a{color:var(--accent);text-decoration:underline}
+        .msg-meta{display:flex;align-items:center;gap:8px;margin-top:8px;opacity:0;transition:opacity .2s}
+        .msg:hover .msg-meta{opacity:1}
+        .msg-meta button{background:none;border:none;color:var(--fg3);cursor:pointer;padding:4px 6px;border-radius:4px;font-size:13px;transition:all .12s}
+        .msg-meta button:hover{color:var(--fg);background:var(--bg-hover)}
+        .resp-time{font-size:11px;color:var(--fg3);margin-left:4px}
+
+        .thinking{display:flex;align-items:center;gap:10px;padding:4px 0;color:var(--fg3);font-size:14px}
+        .think-dots{display:flex;gap:5px}
+        .think-dots span{width:8px;height:8px;background:var(--accent);border-radius:50%;animation:thinkDot 1.4s ease-in-out infinite}
+        .think-dots span:nth-child(2){animation-delay:.15s}
+        .think-dots span:nth-child(3){animation-delay:.3s}
+        @keyframes thinkDot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+        .cursor-blink{display:inline-block;width:2px;height:16px;background:var(--fg);margin-left:1px;vertical-align:text-bottom;animation:blink .8s infinite}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+        .stop-btn{display:none;margin:0 auto 8px;padding:8px 16px;border:1px solid var(--border);border-radius:20px;background:var(--bg2);color:var(--fg);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s;gap:6px;align-items:center}
+        .stop-btn.show{display:flex}
+        .stop-btn:hover{background:var(--bg-hover)}
+
+        .scroll-btn{position:absolute;bottom:100px;left:50%;transform:translateX(-50%) scale(.9);background:var(--bg);border:1px solid var(--border);border-radius:50%;width:36px;height:36px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow);color:var(--fg2);font-size:14px;transition:all .2s;z-index:50}
+        .scroll-btn.show{display:flex;transform:translateX(-50%) scale(1)}
+        .scroll-btn:hover{background:var(--bg-hover)}
+
+        .input-area{padding:0 24px 20px;max-width:768px;width:100%;margin:0 auto;flex-shrink:0}
+        .input-wrap{position:relative;background:var(--bg);border:1.5px solid var(--border);border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:all .25s;overflow:hidden}
+        .input-wrap:focus-within{border-color:#bbb;box-shadow:var(--shadow)}
+        .chat-input{width:100%;padding:14px 52px 14px 18px;border:none;outline:none;font-size:15px;font-family:inherit;resize:none;max-height:200px;min-height:52px;line-height:1.5;background:transparent;color:var(--fg)}
+        .chat-input::placeholder{color:var(--fg3)}
+        .send-btn{position:absolute;right:10px;bottom:8px;width:34px;height:34px;border-radius:8px;border:none;background:var(--fg);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s}
+        .send-btn:hover{background:#333}
+        .send-btn:disabled{background:var(--bg-active);color:var(--fg3);cursor:not-allowed}
+        .input-hint{text-align:center;padding:0 12px 10px;font-size:11.5px;color:var(--fg3)}
+
+        .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--fg);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:all .3s;z-index:1000;pointer-events:none}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        .err-banner{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin:8px 0;font-size:13.5px;color:#991b1b;display:flex;align-items:center;gap:10px}
+        .err-banner button{background:none;border:none;color:#dc2626;cursor:pointer;font-weight:600;font-family:inherit;font-size:13px;text-decoration:underline}
+
+        @media(max-width:768px){
+            .sidebar{position:absolute;height:100%;box-shadow:0 8px 30px rgba(0,0,0,.12)}
+            .suggestions{grid-template-columns:1fr}
+            .msgs{padding:12px 16px}
+            .input-area{padding:0 12px 12px}
+            .set-body{padding:16px}
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+        <button class="new-chat" onclick="newChat()">
+            <i class="fa-solid fa-plus"></i> Obrolan baru
+        </button>
+    </div>
+    <div class="sb-search">
+        <input type="text" placeholder="Cari obrolan..." id="searchInput" oninput="renderConvs()">
+    </div>
+    <div class="sb-list" id="convList"></div>
+    <div class="sb-foot">
+        <div class="sb-user">
+            <div class="avatar-sm">U</div>
+            <div>
+                <div class="u-name">User</div>
+                <div class="u-plan">LEO AI Free</div>
+            </div>
+            <i class="fa-solid fa-ellipsis" style="color:var(--fg3);font-size:14px;margin-left:auto"></i>
+        </div>
+    </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+    <div class="top-bar">
+        <button class="tb-btn" onclick="toggleSidebar()" title="Sidebar">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <span class="model-label" id="modelLabel">LEO AI 4o</span>
+        <div class="spacer"></div>
+        <button class="tb-btn" onclick="openSettings()" title="Pengaturan" style="font-size:16px">
+            <i class="fa-solid fa-sliders"></i>
+        </button>
+    </div>
+
+    <!-- VIEW 1: Chat (welcome + pesan) -->
+    <div class="view" id="chatView">
+        <div class="chat-view" id="chatArea">
+            <div class="welcome" id="welcome">
+                <div class="leo-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div class="w-title">Apa yang bisa saya bantu?</div>
+                <div class="w-sub">LEO AI menggunakan model AI terbaru untuk memberikan jawaban yang cerdas dan akurat.</div>
+                <div class="w-badge"><span class="dot"></span> Online — AI aktif dan siap</div>
+                <div class="suggestions">
+                    <div class="sug-card" onclick="useSug('Jelaskan konsep quantum computing dengan bahasa sederhana')">
+                        <div class="sug-title">Jelaskan quantum computing</div>
+                        <div class="sug-desc">Bahasa sederhana dan mudah dipahami</div>
+                    </div>
+                    <div class="sug-card" onclick="useSug('Buatkan website landing page toko kopi dengan HTML CSS JS')">
+                        <div class="sug-title">Buat landing page toko kopi</div>
+                        <div class="sug-desc">Kode lengkap HTML, CSS, dan JS</div>
+                    </div>
+                    <div class="sug-card" onclick="useSug('Buatkan rencana belajar Python dari nol sampai mahir')">
+                        <div class="sug-title">Rencana belajar Python</div>
+                        <div class="sug-desc">Roadmap lengkap dari pemula</div>
+                    </div>
+                    <div class="sug-card" onclick="useSug('Tulis esai tentang dampak AI terhadap pendidikan di Indonesia')">
+                        <div class="sug-title">Esai dampak AI pada pendidikan</div>
+                        <div class="sug-desc">Analisis mendalam dan terstruktur</div>
+                    </div>
+                </div>
+            </div>
+            <div class="msgs" id="msgs" style="display:none"></div>
+        </div>
+        <button class="stop-btn" id="stopBtn" onclick="stopGen()"><i class="fa-solid fa-stop"></i> Berhenti</button>
+        <button class="scroll-btn" id="scrollBtn" onclick="scrollBot()"><i class="fa-solid fa-chevron-down"></i></button>
+    </div>
+
+    <!-- VIEW 2: Pengaturan (bergantian dengan chat, bukan numpuk) -->
+    <div class="view hidden" id="settingsView">
+        <div class="settings-view">
+            <div class="set-head">
+                <button class="set-back" onclick="closeSettings()">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Kembali
+                </button>
+                <span class="set-title">Pengaturan</span>
+            </div>
+            <div class="set-body">
+                <div class="set-section">
+                    <div class="set-section-title">Model AI</div>
+                    <div class="set-field">
+                        <div class="set-label">Model</div>
+                        <select class="set-select" id="setModel" onchange="onSetChange()">
+                            <option value="openai">LEO AI 4o — Paling cerdas</option>
+                            <option value="deepseek">LEO AI DeepSeek — Reasoning</option>
+                            <option value="mistral">LEO AI Mistral — Ringan</option>
+                            <option value="qwen">LEO AI Qwen — Multibahasa</option>
+                            <option value="llama">LEO AI Llama — Open source</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="set-divider"></div>
+                <div class="set-section">
+                    <div class="set-section-title">Parameter</div>
+                    <div class="set-field">
+                        <div class="set-label">Temperature <span class="val" id="tempVal">0.7</span></div>
+                        <div class="set-desc">Makin tinggi = makin kreatif, makin rendah = makin fokus</div>
+                        <input type="range" class="set-range" id="setTemp" min="0" max="1.5" step="0.1" value="0.7"
+                            oninput="document.getElementById('tempVal').textContent=this.value;onSetChange()">
+                    </div>
+                    <div class="set-field">
+                        <div class="set-label">Max Tokens <span class="val" id="tokVal">2048</span></div>
+                        <div class="set-desc">Panjang maks jawaban (1 token ≈ 0.75 kata)</div>
+                        <input type="range" class="set-range" id="setTok" min="256" max="8192" step="256" value="2048"
+                            oninput="document.getElementById('tokVal').textContent=this.value;onSetChange()">
+                    </div>
+                    <div class="set-field">
+                        <div class="set-label">Top P <span class="val" id="topPVal">0.9</span></div>
+                        <div class="set-desc">Nucleus sampling — diversitas kosakata</div>
+                        <input type="range" class="set-range" id="setTopP" min="0" max="1" step="0.05" value="0.9"
+                            oninput="document.getElementById('topPVal').textContent=this.value;onSetChange()">
+                    </div>
+                </div>
+                <div class="set-divider"></div>
+                <div class="set-section">
+                    <div class="set-section-title">Gaya Jawaban</div>
+                    <div class="set-chips" id="styleChips">
+                        <button class="set-chip active" data-style="balanced" onclick="pickStyle(this)">Seimbang</button>
+                        <button class="set-chip" data-style="formal" onclick="pickStyle(this)">Formal</button>
+                        <button class="set-chip" data-style="casual" onclick="pickStyle(this)">Santai</button>
+                        <button class="set-chip" data-style="technical" onclick="pickStyle(this)">Teknis</button>
+                        <button class="set-chip" data-style="creative" onclick="pickStyle(this)">Kreatif</button>
+                        <button class="set-chip" data-style="concise" onclick="pickStyle(this)">Ringkas</button>
+                    </div>
+                </div>
+                <div class="set-divider"></div>
+                <div class="set-section">
+                    <div class="set-section-title">Instruksi Sistem</div>
+                    <div class="set-field">
+                        <div class="set-desc">Instruksi dasar yang menentukan perilaku AI.</div>
+                        <textarea class="set-textarea" id="setSysPrompt" rows="5" oninput="onSetChange()"></textarea>
+                    </div>
+                </div>
+                <div class="set-divider"></div>
+                <div class="set-section">
+                    <div class="set-section-title">Tampilan</div>
+                    <div class="set-toggle-row">
+                        <div class="set-toggle-info">
+                            <div class="set-toggle-label">Efek Streaming</div>
+                            <div class="set-toggle-desc">Tampilkan jawaban karakter per karakter</div>
+                        </div>
+                        <button class="set-toggle on" id="togStream" onclick="toggleSet(this)"></button>
+                    </div>
+                    <div class="set-toggle-row" style="margin-top:6px">
+                        <div class="set-toggle-info">
+                            <div class="set-toggle-label">Waktu Respons</div>
+                            <div class="set-toggle-desc">Tampilkan durasi di setiap jawaban</div>
+                        </div>
+                        <button class="set-toggle on" id="togTime" onclick="toggleSet(this)"></button>
+                    </div>
+                    <div class="set-toggle-row" style="margin-top:6px">
+                        <div class="set-toggle-info">
+                            <div class="set-toggle-label">Animasi Pesan</div>
+                            <div class="set-toggle-desc">Efek fade-in saat pesan muncul</div>
+                        </div>
+                        <button class="set-toggle on" id="togAnim" onclick="toggleSet(this)"></button>
+                    </div>
+                </div>
+                <div class="set-divider"></div>
+                <button class="set-reset" onclick="resetSettings()">
+                    <i class="fa-solid fa-rotate-left" style="margin-right:6px"></i> Atur Ulang ke Default
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input area selalu di bawah, tapi sembunyi saat settings terbuka -->
+    <div class="input-area" id="inputArea">
+        <div class="input-wrap">
+            <textarea class="chat-input" id="chatIn" placeholder="Kirim pesan ke LEO AI" rows="1"
+                onkeydown="onKey(event)" oninput="autoH(this)"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="send()" disabled>
+                <i class="fa-solid fa-arrow-up"></i>
+            </button>
+        </div>
+        <div class="input-hint">LEO AI bisa membuat kesalahan. Periksa informasi penting.</div>
+    </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====== DEFAULTS ====== */
+const API_URL='https://text.pollinations.ai/';
+const DEFAULT_SYS=`Kamu adalah LEO AI, asisten kecerdasan buatan yang sangat cerdas, cepat, dan membantu.
+
+ATURAN:
+1. Berbahasa Indonesia secara default, kecuali pengguna menggunakan bahasa lain
+2. Gunakan markdown: **bold**, *italic*, ## heading, - list, \`code\`, \`\`\`code block\`\`\`, tabel
+3. Jawaban terstruktur, akurat, berkualitas tinggi
+4. Untuk coding SELALU sertakan code block
+5. Jangan terlalu verbose jika pertanyaan sederhana
+6. Jujur jika tidak yakin — jangan mengarang
+7. Gunakan tabel jika cocok untuk perbandingan
+8. Untuk penjelasan teknis gunakan analogi`;
+
+const STYLE_MAP={
+    balanced:'',formal:'\nGaya: Formal dan profesional. Bahasa baku.',
+    casual:'\nGaya: Santai dan friendly. Bahasa sehari-hari.',
+    technical:'\nGaya: Teknis dan detail. Terminologi tepat.',
+    creative:'\nGaya: Kreatif. Analogi menarik, metafora.',
+    concise:'\nGaya: Ringkas. Langsung ke inti, minimal filler.'
+};
+const MODEL_NAMES={openai:'LEO AI 4o',deepseek:'LEO AI DeepSeek',mistral:'LEO AI Mistral',qwen:'LEO AI Qwen',llama:'LEO AI Llama'};
+
+let S={model:'openai',temp:0.7,maxTokens:2048,topP:0.9,stream:true,showTime:true,anim:true,style:'balanced',sysPrompt:DEFAULT_SYS};
+let modelLabel='LEO AI 4o';
+let convs=[],activeId=null,generating=false,abortCtrl=null;
+
+const chatIn=document.getElementById('chatIn'),sendBtn=document.getElementById('sendBtn'),
+      chatArea=document.getElementById('chatArea'),msgsEl=document.getElementById('msgs'),
+      welcomeEl=document.getElementById('welcome'),stopBtn=document.getElementById('stopBtn'),
+      scrollBtn=document.getElementById('scrollBtn'),
+      chatView=document.getElementById('chatView'),
+      settingsView=document.getElementById('settingsView'),
+      inputArea=document.getElementById('inputArea');
+
+chatIn.addEventListener('input',()=>{sendBtn.disabled=!chatIn.value.trim()});
+chatArea.addEventListener('scroll',()=>{scrollBtn.classList.toggle('show',chatArea.scrollHeight-chatArea.scrollTop-chatArea.clientHeight>200)});
+
+/* ====== VIEW SWITCH: chat <-> settings ====== */
+function openSettings(){
+    chatView.classList.add('hidden');
+    settingsView.classList.remove('hidden');
+    inputArea.style.display='none';
+    syncUI();
+}
+function closeSettings(){
+    settingsView.classList.add('hidden');
+    chatView.classList.remove('hidden');
+    inputArea.style.display='';
+    scrollBot();
+}
+
+/* ====== SETTINGS ====== */
+function syncUI(){
+    document.getElementById('setModel').value=S.model;
+    document.getElementById('setTemp').value=S.temp;
+    document.getElementById('tempVal').textContent=S.temp;
+    document.getElementById('setTok').value=S.maxTokens;
+    document.getElementById('tokVal').textContent=S.maxTokens;
+    document.getElementById('setTopP').value=S.topP;
+    document.getElementById('topPVal').textContent=S.topP;
+    document.getElementById('setSysPrompt').value=S.sysPrompt;
+    setTog('togStream',S.stream);setTog('togTime',S.showTime);setTog('togAnim',S.anim);
+    document.querySelectorAll('#styleChips .set-chip').forEach(c=>c.classList.toggle('active',c.dataset.style===S.style));
+}
+function setTog(id,v){document.getElementById(id).classList.toggle('on',v)}
+function toggleSet(btn){btn.classList.toggle('on');onSetChange()}
+function pickStyle(el){document.querySelectorAll('#styleChips .set-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');onSetChange()}
+function onSetChange(){
+    S.model=document.getElementById('setModel').value;
+    S.temp=parseFloat(document.getElementById('setTemp').value);
+    S.maxTokens=parseInt(document.getElementById('setTok').value);
+    S.topP=parseFloat(document.getElementById('setTopP').value);
+    S.sysPrompt=document.getElementById('setSysPrompt').value;
+    S.stream=document.getElementById('togStream').classList.contains('on');
+    S.showTime=document.getElementById('togTime').classList.contains('on');
+    S.anim=document.getElementById('togAnim').classList.contains('on');
+    const chip=document.querySelector('#styleChips .set-chip.active');
+    S.style=chip?chip.dataset.style:'balanced';
+    modelLabel=MODEL_NAMES[S.model]||'LEO AI 4o';
+    document.getElementById('modelLabel').textContent=modelLabel;
+}
+function resetSettings(){
+    S={model:'openai',temp:0.7,maxTokens:2048,topP:0.9,stream:true,showTime:true,anim:true,style:'balanced',sysPrompt:DEFAULT_SYS};
+    syncUI();modelLabel='LEO AI 4o';document.getElementById('modelLabel').textContent=modelLabel;
+    toast('Pengaturan diatur ulang');
+}
+
+/* ====== SIDEBAR ====== */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed')}
+
+/* ====== UTILS ====== */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+function scrollBot(){requestAnimationFrame(()=>{chatArea.scrollTop=chatArea.scrollHeight})}
+function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px'}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!sendBtn.disabled&&!generating)send()}}
+function useSug(t){chatIn.value=t;sendBtn.disabled=false;send()}
+
+/* ====== MARKDOWN ====== */
+function md(text){
+    if(!text)return'';
+    let h=esc(text);
+    h=h.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,lang,code)=>`<pre><code>${code.trim()}</code><button class="copy-code" onclick="copyCode(this)">Salin</button></pre>`);
+    h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
+    h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    h=h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+    h=h.replace(/^#### (.+)$/gm,'<h4>$1</h4>');
+    h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+    h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+    h=h.replace(/^# (.+)$/gm,'<h2>$1</h2>');
+    h=h.replace(/^[\-\*] (.+)$/gm,'LI$1');
+    h=h.replace(/^\d+\. (.+)$/gm,'LI$1');
+    h=h.replace(/(LI[^\n]*)\n?/g,'<li>$1</li>');
+    h=h.replace(/(<li>LI)/g,'<li>');
+    h=h.replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>');
+    h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+    h=h.replace(/\n\n/g,'</p><p>');
+    h=h.replace(/\n/g,'<br>');
+    if(!h.startsWith('<'))h='<p>'+h+'</p>';
+    return h;
+}
+function copyCode(btn){navigator.clipboard.writeText(btn.previousElementSibling.textContent);btn.textContent='Tersalin!';setTimeout(()=>btn.textContent='Salin',1500)}
+
+/* ====== API ====== */
+function buildSys(){return(S.sysPrompt||DEFAULT_SYS)+(STYLE_MAP[S.style]||'')}
+
+async function callAI(messages,onChunk,onDone,onErr){
+    abortCtrl=new AbortController();
+    const t0=Date.now();
+    const apiMsgs=[{role:'system',content:buildSys()},...messages.map(m=>({role:m.role==='leo'?'assistant':'user',content:m.content}))];
+    const trimmed=apiMsgs.length>21?[apiMsgs[0],...apiMsgs.slice(-20)]:apiMsgs;
+    const timeout=setTimeout(()=>abortCtrl.abort(),45000);
+    try{
+        try{
+            const res=await fetch('https://text.pollinations.ai/openai/chat/completions',{
+                method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({model:S.model,messages:trimmed,stream:true,temperature:S.temp,max_tokens:S.maxTokens,top_p:S.topP}),
+                signal:abortCtrl.signal
+            });
+            if(res.ok){
+                const reader=res.body.getReader(),dec=new TextDecoder();
+                let buf='',full='',worked=false;
+                while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop()||'';
+                for(const line of lines){const tl=line.trim();if(!tl.startsWith('data: '))continue;const d=tl.slice(6);if(d==='[DONE]')continue;try{const j=JSON.parse(d);const c=j.choices?.[0]?.delta?.content;if(c){worked=true;full+=c;onChunk(full)}}catch{}}}
+                if(worked&&full.trim()){clearTimeout(timeout);onDone(full,Date.now()-t0);return}
+            }
+        }catch(e){if(e.name==='AbortError'){clearTimeout(timeout);onDone(null,0,true);return}}
+        if(abortCtrl.signal.aborted){clearTimeout(timeout);return}
+        const res2=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:trimmed,model:S.model,seed:Math.floor(Math.random()*1e5),temperature:S.temp,max_tokens:S.maxTokens}),signal:abortCtrl.signal});
+        if(!res2.ok)throw new Error('API error '+res2.status);
+        const text=await res2.text();
+        if(!text||text.trim().length<3)throw new Error('Empty response');
+        clearTimeout(timeout);
+        if(S.stream)await localStream(text,onChunk);else onChunk(text);
+        onDone(text,Date.now()-t0);
+    }catch(err){clearTimeout(timeout);if(err.name==='AbortError'){onDone(null,0,true);return}onErr(err.message)}
+}
+
+async function localStream(text,onChunk){
+    for(let i=0;i<text.length;i++){
+        if(abortCtrl?.signal.aborted)break;
+        onChunk(text.slice(0,i+1));
+        let d=5;const c=text[i];
+        if(c==='.'||c==='!'||c==='?')d=35;else if(c===',')d=18;else if(c==='\n')d=12;else if(i>500)d=2;else if(i>200)d=3;
+        await sleep(d);
+    }
+}
+
+/* ====== CHAT ====== */
+function newChat(){if(generating)return;activeId=null;msgsEl.innerHTML='';msgsEl.style.display='none';welcomeEl.style.display='flex';renderConvs()}
+
+async function send(){
+    const text=chatIn.value.trim();if(!text||generating)return;
+    // Pastikan di chat view
+    if(!chatView.classList.contains('hidden')===false){closeSettings()}
+    if(!activeId){const c={id:Date.now().toString(),title:text.slice(0,50),messages:[],ts:new Date()};convs.unshift(c);activeId=c.id}
+    const conv=convs.find(c=>c.id===activeId);
+    conv.messages.push({role:'user',content:text});
+    welcomeEl.style.display='none';msgsEl.style.display='flex';renderMsgs();renderConvs();
+    chatIn.value='';chatIn.style.height='auto';sendBtn.disabled=true;
+    triggerAI(conv);
+}
+
+function triggerAI(conv){
+    const aiMsg={role:'leo',content:''};
+    conv.messages.push(aiMsg);renderMsgs(true);
+    generating=true;stopBtn.classList.add('show');
+    callAI(
+        conv.messages.slice(0,-1),
+        p=>{aiMsg.content=p;const el=msgsEl.querySelector('.msg:last-child .msg-text');if(el)el.innerHTML=md(p)+'<span class="cursor-blink"></span>';scrollBot()},
+        (ft,ms,ab)=>{
+            if(ab)aiMsg.content=aiMsg.content||'(Dihentikan)';else if(ft)aiMsg.content=ft;
+            const el=msgsEl.querySelector('.msg:last-child .msg-text');
+            if(el){el.innerHTML=md(aiMsg.content);const c=el.querySelector('.cursor-blink');if(c)c.remove()}
+            addMeta(ab,ms);generating=false;stopBtn.classList.remove('show');abortCtrl=null;scrollBot();
+        },
+        e=>{const el=msgsEl.querySelector('.msg:last-child .msg-text');if(el)el.innerHTML=`<div class="err-banner"><i class="fa-solid fa-triangle-exclamation"></i><span>Gagal: ${esc(e)}</span><button onclick="regenLast()">Coba lagi</button></div>`;conv.messages.pop();generating=false;stopBtn.classList.remove('show');abortCtrl=null}
+    );
+}
+
+function addMeta(ab,ms){
+    const body=msgsEl.querySelector('.msg:last-child .msg-body');if(!body)return;
+    const m=document.createElement('div');m.className='msg-meta';
+    let t='';if(!ab&&ms&&S.showTime)t=`<span class="resp-time">${(ms/1000).toFixed(1)} detik</span>`;
+    m.innerHTML=`<button onclick="copyLast()" title="Salin"><i class="fa-regular fa-clipboard"></i></button><button onclick="regenLast()" title="Regenerasi"><i class="fa-solid fa-arrows-rotate"></i></button>${t}`;
+    body.appendChild(m);
+}
+
+function stopGen(){if(abortCtrl)abortCtrl.abort()}
+function regenLast(){if(generating)return;const conv=convs.find(c=>c.id===activeId);if(!conv||conv.messages.length<2)return;conv.messages.pop();const lu=[...conv.messages].reverse().find(m=>m.role==='user');if(!lu)return;renderMsgs();triggerAI(conv)}
+function copyLast(){const conv=convs.find(c=>c.id===activeId);if(!conv)return;navigator.clipboard.writeText(conv.messages[conv.messages.length-1].content).then(()=>toast('Tersalin ke clipboard'))}
+
+/* ====== RENDER ====== */
+function renderMsgs(thinking=false){
+    const conv=convs.find(c=>c.id===activeId);if(!conv)return;
+    msgsEl.innerHTML='';
+    conv.messages.forEach((m,i)=>{
+        const isLeo=m.role==='leo',isLast=i===conv.messages.length-1;
+        const div=document.createElement('div');div.className='msg';
+        if(!S.anim)div.style.animation='none';
+        let th='';
+        if(isLeo&&m.content===''&&thinking&&isLast)th='<div class="thinking"><span>LEO AI sedang berpikir</span><div class="think-dots"><span></span><span></span><span></span></div></div>';
+        else th=md(m.content);
+        let mh='';
+        if(!thinking||!isLast)mh=`<div class="msg-meta"><button onclick="copyMsg(${i})"><i class="fa-regular fa-clipboard"></i></button>${isLeo?`<button onclick="regenMsg(${i})"><i class="fa-solid fa-arrows-rotate"></i></button>`:''}</div>`;
+        div.innerHTML=`<div class="${isLeo?'avatar-ai':'avatar-sm'}">${isLeo?'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>':'U'}</div><div class="msg-body"><div class="msg-role">${isLeo?modelLabel:'Anda'}</div><div class="msg-text">${th}</div>${mh}</div>`;
+        msgsEl.appendChild(div);
+    });
+    scrollBot();
+}
+function copyMsg(idx){const conv=convs.find(c=>c.id===activeId);if(!conv)return;navigator.clipboard.writeText(conv.messages[idx].content).then(()=>toast('Tersalin'))}
+function regenMsg(idx){if(generating)return;const conv=convs.find(c=>c.id===activeId);if(!conv)return;conv.messages.splice(idx);const lu=[...conv.messages].reverse().find(m=>m.role==='user');if(!lu)return;renderMsgs();triggerAI(conv)}
+
+/* ====== CONVERSATIONS ====== */
+function renderConvs(){
+    const list=document.getElementById('convList'),q=document.getElementById('searchInput').value.toLowerCase();
+    const filtered=convs.filter(c=>c.title.toLowerCase().includes(q));
+    if(!filtered.length){list.innerHTML='<div style="padding:20px;text-align:center;font-size:13px;color:var(--fg3)">Belum ada obrolan</div>';return}
+    const groups={};filtered.forEach(c=>{const k=gk(new Date(c.ts));if(!groups[k])groups[k]=[];groups[k].push(c)});
+    let html='';
+    for(const[label,items]of Object.entries(groups)){
+        html+=`<div class="sb-label">${label}</div>`;
+        items.forEach(c=>{html+=`<div class="sb-item ${c.id===activeId?'active':''}" onclick="loadConv('${c.id}')"><i class="fa-regular fa-message" style="font-size:13px;color:var(--fg3);flex-shrink:0"></i><span class="t">${esc(c.title)}</span><div class="a"><button onclick="event.stopPropagation();renameConv('${c.id}')"><i class="fa-solid fa-pen"></i></button><button onclick="event.stopPropagation();delConv('${c.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`});
+    }
+    list.innerHTML=html;
+}
+function gk(d){const n=new Date(),df=n-d;if(df<864e5&&d.getDate()===n.getDate())return'Hari Ini';if(df<1728e5)return'Kemarin';if(df<6048e5)return'7 Hari Terakhir';if(df<2592e6)return'30 Hari Terakhir';return'Lebih Lama'}
+function loadConv(id){if(generating)return;activeId=id;welcomeEl.style.display='none';msgsEl.style.display='flex';renderMsgs();renderConvs();scrollBot();if(window.innerWidth<=768)document.getElementById('sidebar').classList.add('collapsed')}
+function delConv(id){convs=convs.filter(c=>c.id!==id);if(activeId===id)newChat();else renderConvs();toast('Obrolan dihapus')}
+function renameConv(id){const conv=convs.find(c=>c.id===id);if(!conv)return;const span=document.querySelector(`.sb-item.active .t`);if(!span)return;const inp=document.createElement('input');inp.value=conv.title;inp.style.cssText='width:100%;border:1px solid var(--accent);border-radius:4px;padding:2px 6px;font-size:13px;font-family:inherit;outline:none;';const done=()=>{conv.title=inp.value.trim()||'Obrolan baru';renderConvs()};inp.addEventListener('blur',done);inp.addEventListener('keydown',e=>{if(e.key==='Enter')done();if(e.key==='Escape')renderConvs()});span.replaceWith(inp);inp.focus();inp.select()}
+
+/* ====== KEYBOARD ====== */
+document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+        if(!settingsView.classList.contains('hidden'))closeSettings();
+    }
+});
+
+/* ====== INIT ====== */
+syncUI();renderConvs();chatIn.focus();
+if(window.innerWidth<=768)document.getElementById('sidebar').classList.add('collapsed');
+</script>
+</body>
+</html>

@@ -4,695 +4,1151 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEO AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        :root{
-            --bg:#fff;--fg:#1a1a2e;--muted:#8e8ea0;--accent:#10a37f;
-            --accent-h:#0d8c6d;--border:#e5e5e5;--card:#f7f7f8;
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --bg-hover: #222222;
+            --bg-input: #161616;
+            --text-primary: #f0f0f0;
+            --text-secondary: #999999;
+            --text-muted: #555555;
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --accent-dim: rgba(245,158,11,0.12);
+            --border: #262626;
+            --border-light: #333333;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --code-bg: #0d0d0d;
         }
-        body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--fg);height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100dvh;
+            overflow: hidden;
+        }
+        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Space Grotesk', sans-serif; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-        header{display:flex;align-items:center;justify-content:center;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg);z-index:10;flex-shrink:0}
-        .logo{display:flex;align-items:center;gap:10px}
-        .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#34d399);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;box-shadow:0 2px 10px rgba(16,163,127,.3)}
-        .logo-text{font-size:18px;font-weight:700;letter-spacing:-.5px}
-        .logo-text span{color:var(--accent)}
+        /* Sidebar */
+        #sidebar {
+            width: 280px; min-width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+            z-index: 40;
+        }
+        #sidebar.collapsed { transform: translateX(-100%); position: absolute; height: 100%; opacity: 0; pointer-events: none; }
+        .sidebar-brand {
+            padding: 20px; display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .brand-icon {
+            width: 40px; height: 40px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), #ef4444);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Grotesk'; font-weight: 700; font-size: 18px; color: #000;
+            box-shadow: 0 0 20px rgba(245,158,11,0.3);
+        }
+        .new-chat-btn {
+            margin: 16px; padding: 12px 16px; border-radius: 12px;
+            border: 1px dashed var(--border-light); background: transparent;
+            color: var(--text-secondary); cursor: pointer; font-size: 14px;
+            display: flex; align-items: center; gap: 10px;
+            transition: all 0.2s;
+            font-family: 'DM Sans';
+        }
+        .new-chat-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+        .conv-list { flex: 1; overflow-y: auto; padding: 4px 8px; }
+        .conv-item {
+            padding: 12px 14px; border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; gap: 10px; margin-bottom: 2px;
+            transition: all 0.15s; position: relative; group: true;
+        }
+        .conv-item:hover { background: var(--bg-hover); }
+        .conv-item.active { background: var(--bg-tertiary); }
+        .conv-item .conv-title { flex: 1; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
+        .conv-item.active .conv-title { color: var(--text-primary); }
+        .conv-item .conv-delete {
+            opacity: 0; background: none; border: none; color: var(--text-muted);
+            cursor: pointer; padding: 4px; font-size: 12px; transition: all 0.15s;
+        }
+        .conv-item:hover .conv-delete { opacity: 1; }
+        .conv-item .conv-delete:hover { color: var(--danger); }
 
-        .chat-container{flex:1;overflow-y:auto;scroll-behavior:smooth}
-        .chat-container::-webkit-scrollbar{width:5px}
-        .chat-container::-webkit-scrollbar-track{background:transparent}
-        .chat-container::-webkit-scrollbar-thumb{background:#d1d1d1;border-radius:10px}
-        .chat-inner{max-width:768px;margin:0 auto;padding:16px 20px 10px}
+        /* Main Layout */
+        #appLayout { display: flex; height: 100dvh; }
+        #mainContent { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
 
-        /* Welcome */
-        .welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:58vh;text-align:center;padding:40px 20px;animation:fadeUp .5s ease}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-        .welcome-icon{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),#34d399);border-radius:20px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:800;margin-bottom:20px;box-shadow:0 8px 28px rgba(16,163,127,.22);animation:pulse-glow 3s ease-in-out infinite}
-        @keyframes pulse-glow{0%,100%{box-shadow:0 8px 28px rgba(16,163,127,.22)}50%{box-shadow:0 8px 40px rgba(16,163,127,.38)}}
-        .welcome h1{font-size:26px;font-weight:700;margin-bottom:6px}
-        .welcome p{color:var(--muted);font-size:14.5px;max-width:400px;line-height:1.6}
-        .suggestions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:28px;width:100%;max-width:520px}
-        .sug-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-align:left;cursor:pointer;transition:all .2s;font-size:13px;color:var(--fg);line-height:1.5;opacity:0;animation:cardIn .4s ease forwards}
-        .sug-card:nth-child(1){animation-delay:.1s}
-        .sug-card:nth-child(2){animation-delay:.18s}
-        .sug-card:nth-child(3){animation-delay:.26s}
-        .sug-card:nth-child(4){animation-delay:.34s}
-        @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-        .sug-card:hover{background:#efefef;border-color:#ccc;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
-        .sug-card i{font-size:16px;margin-bottom:6px;display:block;color:var(--accent)}
+        /* Header */
+        #mainHeader {
+            padding: 14px 20px; display: flex; align-items: center; gap: 14px;
+            border-bottom: 1px solid var(--border); background: var(--bg-primary);
+            backdrop-filter: blur(12px); z-index: 10;
+        }
+        #menuBtn {
+            width: 36px; height: 36px; border-radius: 8px; border: none;
+            background: transparent; color: var(--text-secondary); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s; font-size: 16px;
+        }
+        #menuBtn:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .model-badge {
+            font-size: 12px; padding: 4px 10px; border-radius: 20px;
+            background: var(--accent-dim); color: var(--accent);
+            font-weight: 600; letter-spacing: 0.3px;
+        }
+
+        /* Chat Area */
+        #chatArea { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+        #welcomeScreen {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100%; padding: 40px 20px;
+            text-align: center;
+        }
+        .welcome-logo {
+            width: 80px; height: 80px; border-radius: 24px;
+            background: linear-gradient(135deg, var(--accent), #ef4444, #f59e0b);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Grotesk'; font-weight: 700; font-size: 32px; color: #000;
+            box-shadow: 0 0 60px rgba(245,158,11,0.25), 0 0 120px rgba(245,158,11,0.1);
+            margin-bottom: 24px; animation: floatLogo 4s ease-in-out infinite;
+        }
+        @keyframes floatLogo {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .welcome-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .welcome-sub { color: var(--text-secondary); font-size: 15px; margin-bottom: 40px; max-width: 420px; line-height: 1.6; }
+        .suggestion-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 560px; width: 100%; }
+        .suggestion-card {
+            padding: 16px; border-radius: 14px; border: 1px solid var(--border);
+            background: var(--bg-secondary); cursor: pointer; text-align: left;
+            transition: all 0.2s; display: flex; flex-direction: column; gap: 8px;
+        }
+        .suggestion-card:hover { border-color: var(--accent); background: var(--accent-dim); transform: translateY(-2px); }
+        .suggestion-card .sc-icon { font-size: 18px; color: var(--accent); }
+        .suggestion-card .sc-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
 
         /* Messages */
-        .message{display:flex;gap:14px;padding:18px 0;animation:msgSlideIn .4s cubic-bezier(.22,1,.36,1)}
-        @keyframes msgSlideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-        .message+.message{border-top:1px solid var(--border)}
-        .msg-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;margin-top:2px}
-        .msg-av.u{background:#e8e8ed;color:#555}
-        .msg-av.a{background:linear-gradient(135deg,var(--accent),#34d399);color:#fff;font-size:10px;font-weight:800}
-        .msg-body{flex:1;min-width:0}
-        .msg-name{font-weight:600;font-size:13.5px;margin-bottom:5px}
-        .msg-content{font-size:14.5px;line-height:1.75;color:#333;word-break:break-word;position:relative}
+        .message-row { padding: 20px 0; animation: msgIn 0.3s ease-out; }
+        @keyframes msgIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .message-inner { max-width: 780px; margin: 0 auto; padding: 0 24px; display: flex; gap: 16px; }
+        .msg-avatar {
+            width: 34px; height: 34px; min-width: 34px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; font-family: 'Space Grotesk';
+        }
+        .msg-avatar.user-avatar { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border); }
+        .msg-avatar.ai-avatar { background: linear-gradient(135deg, var(--accent), #ef4444); color: #000; }
+        .msg-body { flex: 1; min-width: 0; }
+        .msg-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); }
+        .msg-content { font-size: 15px; line-height: 1.75; color: var(--text-primary); }
+        .msg-content strong { font-weight: 600; color: #fff; }
+        .msg-content em { font-style: italic; color: var(--text-secondary); }
+        .msg-content code:not(.block-code) {
+            background: var(--bg-tertiary); padding: 2px 7px; border-radius: 5px;
+            font-size: 13px; color: var(--accent); font-family: 'Courier New', monospace;
+        }
+        .msg-image {
+            margin-top: 12px; border-radius: 14px; overflow: hidden;
+            border: 1px solid var(--border); cursor: pointer; max-width: 480px;
+            transition: all 0.2s; position: relative;
+        }
+        .msg-image:hover { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-dim); }
+        .msg-image img { width: 100%; display: block; }
+        .msg-image .img-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 12px; background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            display: flex; gap: 8px; opacity: 0; transition: opacity 0.2s;
+        }
+        .msg-image:hover .img-overlay { opacity: 1; }
+        .img-overlay button {
+            padding: 6px 12px; border-radius: 8px; border: none;
+            background: rgba(255,255,255,0.15); color: #fff; font-size: 12px;
+            cursor: pointer; backdrop-filter: blur(8px); transition: all 0.15s;
+            font-family: 'DM Sans';
+        }
+        .img-overlay button:hover { background: var(--accent); color: #000; }
+        .code-block {
+            margin-top: 12px; border-radius: 12px; overflow: hidden;
+            border: 1px solid var(--border); background: var(--code-bg);
+        }
+        .code-header {
+            padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg-tertiary); border-bottom: 1px solid var(--border);
+        }
+        .code-lang { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; }
+        .code-copy {
+            background: none; border: none; color: var(--text-muted); cursor: pointer;
+            font-size: 12px; padding: 4px 8px; border-radius: 6px; transition: all 0.15s;
+            font-family: 'DM Sans';
+        }
+        .code-copy:hover { color: var(--accent); background: var(--accent-dim); }
+        .code-block pre { padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.6; color: #c9d1d9; font-family: 'Courier New', monospace; }
 
-        /* Markdown */
-        .msg-content p{margin-bottom:8px}.msg-content p:last-child{margin-bottom:0}
-        .msg-content strong{font-weight:600;color:var(--fg)}
-        .msg-content em{font-style:italic}
-        .msg-content code{background:#f1f1f3;padding:2px 6px;border-radius:4px;font-size:13px;font-family:'SF Mono','Fira Code',monospace;color:#c7254e}
-        .msg-content pre{background:#1a1a2e;color:#e0e0e0;padding:14px 16px;border-radius:12px;overflow-x:auto;margin:8px 0;font-size:12.5px;line-height:1.65;font-family:'SF Mono','Fira Code',monospace;animation:codeIn .3s ease}
-        @keyframes codeIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
-        .msg-content pre code{background:none;padding:0;color:inherit;font-size:inherit}
-        .msg-content ul,.msg-content ol{padding-left:20px;margin:6px 0}
-        .msg-content li{margin-bottom:4px;line-height:1.65}
-        .msg-content li{animation:liIn .25s ease both}
-        @keyframes liIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
-        .msg-content h1,.msg-content h2,.msg-content h3{font-weight:700;margin:14px 0 5px;color:var(--fg);animation:headIn .3s ease}
-        @keyframes headIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-        .msg-content h1{font-size:20px}.msg-content h2{font-size:17px}.msg-content h3{font-size:15px}
-        .msg-img{max-width:320px;max-height:240px;border-radius:10px;margin-bottom:8px;object-fit:cover;border:1px solid var(--border);animation:imgIn .4s ease}
-        @keyframes imgIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-
-        /* Typing cursor — kunci ke-mulusan */
-        .typing-cursor{display:inline-block;width:2.5px;height:1.15em;background:var(--accent);border-radius:2px;margin-left:2px;vertical-align:text-bottom;animation:cursorBlink .8s ease-in-out infinite}
-        @keyframes cursorBlink{0%,45%{opacity:1}50%,95%{opacity:0}100%{opacity:1}}
-        .typing-cursor.hide{animation:cursorFadeOut .3s ease forwards}
-        @keyframes cursorFadeOut{to{opacity:0;width:0;margin:0}}
-
-        /* Typing dots */
-        .typing-dots{display:inline-flex;gap:5px;align-items:center;padding:4px 0}
-        .typing-dots span{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:dotWave 1.4s ease-in-out infinite}
-        .typing-dots span:nth-child(2){animation-delay:.2s}
-        .typing-dots span:nth-child(3){animation-delay:.4s}
-        @keyframes dotWave{0%,80%,100%{transform:scale(.6);opacity:.3}40%{transform:scale(1);opacity:1}}
-
-        /* Input */
-        .input-area{padding:0 20px 16px;background:var(--bg);flex-shrink:0}
-        .input-wrapper{max-width:768px;margin:0 auto;position:relative}
-        .input-preview{display:none;padding:6px 0 4px}.input-preview.active{display:flex;flex-wrap:wrap;gap:6px}
-        .preview-item{position:relative;display:inline-block;animation:prevIn .25s ease}
-        @keyframes prevIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-        .preview-item img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
-        .preview-rm{position:absolute;top:-5px;right:-5px;width:20px;height:20px;background:#333;color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-        .preview-rm:hover{background:#ef4444;transform:scale(1.1)}
-        .input-box{display:flex;align-items:flex-end;background:var(--card);border:1.5px solid var(--border);border-radius:24px;padding:6px 6px 6px 16px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.03)}
-        .input-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(16,163,127,.08),0 2px 8px rgba(0,0,0,.03)}
-        #chatInput{flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:14.5px;resize:none;max-height:150px;min-height:24px;line-height:1.5;padding:5px 0;color:var(--fg)}
-        #chatInput::placeholder{color:var(--muted)}
-        .input-actions{display:flex;align-items:center;gap:3px;flex-shrink:0}
-        .btn-icon{width:36px;height:36px;border:none;border-radius:50%;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-        .btn-icon:hover{background:#e5e5e5;color:var(--fg)}
-        .btn-send{width:36px;height:36px;border:none;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s cubic-bezier(.22,1,.36,1);opacity:.35;pointer-events:none}
-        .btn-send.active{opacity:1;pointer-events:auto}
-        .btn-send.active:hover{background:var(--accent-h);transform:scale(1.08)}
-        .btn-send.stop{background:#ef4444;opacity:1;pointer-events:auto;animation:stopPulse 1.5s ease-in-out infinite}
-        @keyframes stopPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
-        .btn-send.stop:hover{background:#dc2626;transform:scale(1.08)}
-        .footer-note{text-align:center;font-size:11.5px;color:#c0c0c0;margin-top:8px}
-
-        /* Drag */
-        .drag-ov{display:none;position:fixed;inset:0;background:rgba(255,255,255,.93);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:10px;backdrop-filter:blur(6px);animation:dragIn .2s ease}
-        .drag-ov.active{display:flex}
-        @keyframes dragIn{from{opacity:0}to{opacity:1}}
-        .drag-ov i{font-size:44px;color:var(--accent);animation:dragBounce 1s ease-in-out infinite}
-        @keyframes dragBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-        .drag-ov p{font-size:16px;font-weight:600;color:var(--fg)}
-
-        /* Toast */
-        .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);background:#1a1a2e;color:#fff;padding:10px 22px;border-radius:12px;font-size:13px;z-index:200;transition:transform .35s cubic-bezier(.22,1,.36,1);box-shadow:0 6px 24px rgba(0,0,0,.18);pointer-events:none}
-        .toast.show{transform:translateX(-50%) translateY(0)}
-
-        @media(max-width:600px){
-            .suggestions{grid-template-columns:1fr}
-            .welcome h1{font-size:21px}
-            .welcome-icon{width:52px;height:52px;font-size:22px;border-radius:15px}
-            .msg-img{max-width:220px;max-height:180px}
+        /* Thinking Indicator */
+        .thinking-dots { display: flex; gap: 5px; padding: 8px 0; }
+        .thinking-dots span {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+            animation: bounce 1.2s ease-in-out infinite;
+        }
+        .thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .thinking-dots span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bounce {
+            0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
         }
 
-        @media(prefers-reduced-motion:reduce){
-            *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
+        /* Input Area */
+        #inputArea { padding: 16px 24px 20px; background: var(--bg-primary); border-top: 1px solid var(--border); }
+        .input-wrapper {
+            max-width: 780px; margin: 0 auto;
+            background: var(--bg-input); border: 1px solid var(--border);
+            border-radius: 16px; padding: 8px; display: flex; align-items: flex-end; gap: 4px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .input-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+        .input-wrapper button {
+            width: 38px; height: 38px; border-radius: 10px; border: none;
+            background: transparent; color: var(--text-muted); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s; font-size: 15px; flex-shrink: 0;
+        }
+        .input-wrapper button:hover { background: var(--bg-hover); color: var(--text-secondary); }
+        #sendBtn { background: var(--accent) !important; color: #000 !important; }
+        #sendBtn:hover { background: var(--accent-hover) !important; transform: scale(1.05); }
+        #sendBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+        #messageInput {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: var(--text-primary); font-size: 15px; padding: 8px 6px;
+            resize: none; max-height: 150px; line-height: 1.5;
+            font-family: 'DM Sans';
+        }
+        #messageInput::placeholder { color: var(--text-muted); }
+        .input-disclaimer { text-align: center; margin-top: 10px; font-size: 11.5px; color: var(--text-muted); max-width: 780px; margin-left: auto; margin-right: auto; }
+
+        /* Photo Editor Panel */
+        #editorPanel {
+            position: absolute; top: 0; right: 0; bottom: 0; width: 420px; min-width: 420px;
+            background: var(--bg-secondary); border-left: 1px solid var(--border);
+            z-index: 30; display: flex; flex-direction: column;
+            transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        #editorPanel.open { transform: translateX(0); }
+        .editor-header {
+            padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+        .editor-header h3 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .editor-close {
+            width: 32px; height: 32px; border-radius: 8px; border: none;
+            background: transparent; color: var(--text-secondary); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+        }
+        .editor-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .editor-body { flex: 1; overflow-y: auto; padding: 20px; }
+        .editor-preview {
+            width: 100%; aspect-ratio: 4/3; border-radius: 12px; overflow: hidden;
+            background: var(--bg-primary); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+            position: relative;
+        }
+        .editor-preview img { max-width: 100%; max-height: 100%; object-fit: contain; transition: filter 0.15s; }
+        .editor-preview .upload-placeholder {
+            text-align: center; color: var(--text-muted); cursor: pointer; padding: 20px;
+        }
+        .editor-preview .upload-placeholder i { font-size: 36px; margin-bottom: 10px; display: block; }
+        .editor-preview .upload-placeholder span { font-size: 13px; }
+        .filter-group { margin-bottom: 18px; }
+        .filter-label {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);
+        }
+        .filter-label .filter-value { color: var(--accent); font-weight: 600; font-family: 'Space Grotesk'; }
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px;
+            background: var(--bg-hover); outline: none; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+            background: var(--accent); border: 3px solid var(--bg-secondary);
+            box-shadow: 0 0 8px rgba(245,158,11,0.3); cursor: pointer;
+        }
+        .filter-toggles { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+        .filter-toggle {
+            padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-secondary); font-size: 12px;
+            cursor: pointer; transition: all 0.15s; font-family: 'DM Sans';
+        }
+        .filter-toggle.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+        .filter-toggle:hover { border-color: var(--accent); }
+        .editor-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .editor-actions button {
+            flex: 1; min-width: 90px; padding: 10px 12px; border-radius: 10px;
+            border: 1px solid var(--border); background: var(--bg-tertiary);
+            color: var(--text-secondary); font-size: 12.5px; cursor: pointer;
+            transition: all 0.15s; display: flex; align-items: center;
+            justify-content: center; gap: 6px; font-family: 'DM Sans';
+        }
+        .editor-actions button:hover { border-color: var(--accent); color: var(--accent); }
+        .editor-actions .btn-download { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+        .editor-actions .btn-download:hover { background: var(--accent-hover); }
+        .editor-actions .btn-reset:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* Overlay */
+        #sidebarOverlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            z-index: 35; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        #sidebarOverlay.active { opacity: 1; pointer-events: all; }
+
+        /* Toast */
+        #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 8px; }
+        .toast {
+            padding: 12px 20px; border-radius: 12px; font-size: 13px;
+            background: var(--bg-tertiary); border: 1px solid var(--border);
+            color: var(--text-primary); box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            animation: toastIn 0.3s ease-out; display: flex; align-items: center; gap: 10px;
+        }
+        .toast.success { border-color: var(--success); }
+        .toast.success i { color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+        .toast.error i { color: var(--danger); }
+        @keyframes toastIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+
+        /* Voice recording indicator */
+        .voice-active { color: var(--danger) !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #sidebar { position: fixed; height: 100%; }
+            #sidebar:not(.collapsed) { box-shadow: 8px 0 40px rgba(0,0,0,0.5); }
+            #editorPanel { width: 100%; min-width: 100%; }
+            .suggestion-grid { grid-template-columns: 1fr; }
+            .message-inner { padding: 0 16px; }
+            #inputArea { padding: 12px 16px 16px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
     </style>
 </head>
 <body>
-
-<header>
-    <div class="logo">
-        <div class="logo-icon">L</div>
-        <div class="logo-text"><span>LEO</span> AI</div>
-    </div>
-</header>
-
-<div class="chat-container" id="chatContainer">
-    <div class="chat-inner" id="chatInner">
-        <div class="welcome" id="welcomeScreen">
-            <div class="welcome-icon">L</div>
-            <h1>Halo, ada yang bisa saya bantu?</h1>
-            <p>Saya LEO AI, asisten cerdas Anda. Tanyakan apa saja atau unggah gambar untuk dianalisis.</p>
-            <div class="suggestions">
-                <div class="sug-card" onclick="useSug(this)"><i class="fa-solid fa-lightbulb"></i>Jelaskan konsep quantum computing dengan sederhana</div>
-                <div class="sug-card" onclick="useSug(this)"><i class="fa-solid fa-code"></i>Buatkan fungsi JavaScript untuk validasi email</div>
-                <div class="sug-card" onclick="useSug(this)"><i class="fa-solid fa-pen-fancy"></i>Tuliskan paragraf persuasif untuk produk skincare</div>
-                <div class="sug-card" onclick="useSug(this)"><i class="fa-solid fa-image"></i>Unggah gambar lalu saya akan menganalisisnya</div>
+    <div id="appLayout">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">L</div>
+                <div>
+                    <div class="font-display" style="font-weight:700;font-size:17px;">LEO AI</div>
+                    <div style="font-size:11px;color:var(--text-muted);">Asisten Serba Bisa</div>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<div class="drag-ov" id="dragOv"><i class="fa-solid fa-cloud-arrow-up"></i><p>Lepaskan gambar di sini</p></div>
-<div class="toast" id="toast"></div>
-
-<div class="input-area">
-    <div class="input-wrapper">
-        <div class="input-preview" id="inputPreview"></div>
-        <div class="input-box">
-            <textarea id="chatInput" rows="1" placeholder="Ketik pesan Anda..." aria-label="Pesan"></textarea>
-            <div class="input-actions">
-                <button class="btn-icon" id="btnUpload" title="Unggah gambar" aria-label="Unggah gambar"><i class="fa-solid fa-paperclip"></i></button>
-                <button class="btn-send" id="btnSend" title="Kirim" aria-label="Kirim"><i class="fa-solid fa-arrow-up"></i></button>
+            <button class="new-chat-btn" onclick="newChat()">
+                <i class="fas fa-plus"></i> Obrolan Baru
+            </button>
+            <div class="conv-list" id="convList"></div>
+            <div style="padding:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);text-align:center;">
+                LEO AI v2.0 &middot; Dibuat dengan <i class="fas fa-heart" style="color:var(--accent);font-size:10px;"></i>
             </div>
-        </div>
-        <input type="file" id="fileInput" accept="image/*" multiple hidden>
-        <div class="footer-note">LEO AI dapat membuat kesalahan. Periksa informasi penting.</div>
+        </aside>
+
+        <!-- Overlay -->
+        <div id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- Main -->
+        <main id="mainContent">
+            <header id="mainHeader">
+                <button id="menuBtn" onclick="toggleSidebar()" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <span class="font-display" style="font-weight:600;font-size:16px;">LEO AI</span>
+                <span class="model-badge">Model Terbaru</span>
+                <div style="flex:1"></div>
+                <button onclick="toggleEditor()" style="width:36px;height:36px;border-radius:8px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'" aria-label="Photo Editor">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                </button>
+            </header>
+
+            <!-- Chat Area -->
+            <div id="chatArea">
+                <div id="welcomeScreen">
+                    <div class="welcome-logo">L</div>
+                    <h2 class="welcome-title font-display">Halo, saya LEO AI</h2>
+                    <p class="welcome-sub">Asisten kecerdasan buatan yang bisa membantu Anda menulis, membuat kode, menghasilkan gambar, mengedit foto, dan banyak lagi.</p>
+                    <div class="suggestion-grid">
+                        <div class="suggestion-card" onclick="useSuggestion('Buatkan foto pemandangan pegunungan saat sunset')">
+                            <i class="fas fa-image sc-icon"></i>
+                            <span class="sc-text">Buatkan foto pemandangan pegunungan saat sunset</span>
+                        </div>
+                        <div class="suggestion-card" onclick="useSuggestion('Buatkan kode website portfolio modern dengan HTML dan CSS')">
+                            <i class="fas fa-code sc-icon"></i>
+                            <span class="sc-text">Buatkan kode website portfolio modern</span>
+                        </div>
+                        <div class="suggestion-card" onclick="useSuggestion('Edit foto dengan efek vintage dan warna hangat')">
+                            <i class="fas fa-paint-brush sc-icon"></i>
+                            <span class="sc-text">Edit foto dengan efek vintage dan warna hangat</span>
+                        </div>
+                        <div class="suggestion-card" onclick="useSuggestion('Jelaskan tentang kecerdasan buatan dan bagaimana cara kerjanya')">
+                            <i class="fas fa-brain sc-icon"></i>
+                            <span class="sc-text">Jelaskan tentang kecerdasan buatan</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="messagesContainer" style="display:none;"></div>
+            </div>
+
+            <!-- Input -->
+            <div id="inputArea">
+                <div class="input-wrapper">
+                    <button onclick="document.getElementById('fileUpload').click()" title="Unggah foto" aria-label="Upload foto">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <input type="file" id="fileUpload" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
+                    <textarea id="messageInput" rows="1" placeholder="Tanya apa saja kepada LEO AI..." onkeydown="handleInputKey(event)" oninput="autoResize(this)"></textarea>
+                    <button id="voiceBtn" onclick="toggleVoice()" title="Input suara" aria-label="Voice input">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button id="sendBtn" onclick="sendMessage()" disabled aria-label="Kirim pesan">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <p class="input-disclaimer">LEO AI dapat menghasilkan informasi yang tidak selalu akurat. Periksa kembali informasi penting.</p>
+            </div>
+
+            <!-- Photo Editor Panel -->
+            <div id="editorPanel">
+                <div class="editor-header">
+                    <h3 class="font-display"><i class="fas fa-wand-magic-sparkles" style="color:var(--accent);"></i> Editor Foto</h3>
+                    <button class="editor-close" onclick="toggleEditor()" aria-label="Tutup editor"><i class="fas fa-xmark"></i></button>
+                </div>
+                <div class="editor-body">
+                    <div class="editor-preview" id="editorPreview">
+                        <div class="upload-placeholder" onclick="document.getElementById('editorFileUpload').click()">
+                            <i class="fas fa-cloud-arrow-up"></i>
+                            <span>Klik untuk unggah foto</span>
+                        </div>
+                        <img id="editorImage" style="display:none;" alt="Preview">
+                    </div>
+                    <input type="file" id="editorFileUpload" accept="image/*" style="display:none" onchange="loadEditorImage(event)">
+
+                    <div class="filter-group">
+                        <div class="filter-label"><span>Kecerahan</span><span class="filter-value" id="brightnessVal">100%</span></div>
+                        <input type="range" min="20" max="200" value="100" id="filterBrightness" oninput="updateFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <div class="filter-label"><span>Kontras</span><span class="filter-value" id="contrastVal">100%</span></div>
+                        <input type="range" min="20" max="200" value="100" id="filterContrast" oninput="updateFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <div class="filter-label"><span>Saturasi</span><span class="filter-value" id="saturateVal">100%</span></div>
+                        <input type="range" min="0" max="300" value="100" id="filterSaturate" oninput="updateFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <div class="filter-label"><span>Blur</span><span class="filter-value" id="blurVal">0px</span></div>
+                        <input type="range" min="0" max="20" value="0" id="filterBlur" oninput="updateFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <div class="filter-label"><span>Hue Rotate</span><span class="filter-value" id="hueVal">0°</span></div>
+                        <input type="range" min="0" max="360" value="0" id="filterHue" oninput="updateFilters()">
+                    </div>
+
+                    <div class="filter-toggles">
+                        <button class="filter-toggle" data-filter="grayscale" onclick="toggleFilter(this)">Grayscale</button>
+                        <button class="filter-toggle" data-filter="sepia" onclick="toggleFilter(this)">Sepia</button>
+                        <button class="filter-toggle" data-filter="invert" onclick="toggleFilter(this)">Invert</button>
+                    </div>
+
+                    <div class="editor-actions">
+                        <button onclick="rotateImage()"><i class="fas fa-rotate-right"></i> Putar</button>
+                        <button onclick="flipImage('h')"><i class="fas fa-left-right"></i> Flip</button>
+                        <button class="btn-reset" onclick="resetFilters()"><i class="fas fa-arrow-rotate-left"></i> Reset</button>
+                        <button class="btn-download" onclick="downloadImage()"><i class="fas fa-download"></i> Unduh</button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-</div>
 
-<script>
-// ===== DOM =====
-const chatContainer = document.getElementById('chatContainer');
-const chatInner = document.getElementById('chatInner');
-const welcomeScreen = document.getElementById('welcomeScreen');
-const chatInput = document.getElementById('chatInput');
-const btnSend = document.getElementById('btnSend');
-const btnUpload = document.getElementById('btnUpload');
-const fileInput = document.getElementById('fileInput');
-const inputPreview = document.getElementById('inputPreview');
-const dragOv = document.getElementById('dragOv');
-const toastEl = document.getElementById('toast');
+    <div id="toastContainer"></div>
 
-// ===== STATE =====
-let pendingImages = [];
-let isGenerating = false;
-let currentController = null;
-let conversationHistory = [];
-let userScrolledUp = false;
-let lastScrollTop = 0;
+    <script>
+    /* ===== State ===== */
+    const state = {
+        conversations: [],
+        currentId: null,
+        isTyping: false,
+        sidebarOpen: window.innerWidth > 768,
+        editorOpen: false,
+        editorRotation: 0,
+        editorFlipH: false,
+        editorToggles: { grayscale: false, sepia: false, invert: false },
+        voiceActive: false,
+        recognition: null
+    };
 
-const SYSTEM_MSG = {
-    role: 'system',
-    content: `Kamu adalah LEO AI, asisten kecerdasan buatan yang cerdas, ramah, dan sangat membantu. Kamu selalu menjawab dalam Bahasa Indonesia yang natural dan mudah dipahami, kecuali pengguna menulis dalam bahasa lain maka jawab dalam bahasa tersebut.
+    /* ===== DOM ===== */
+    const $ = id => document.getElementById(id);
+    const sidebar = $('sidebar');
+    const overlay = $('sidebarOverlay');
+    const chatArea = $('chatArea');
+    const welcomeScreen = $('welcomeScreen');
+    const msgContainer = $('messagesContainer');
+    const msgInput = $('messageInput');
+    const sendBtn = $('sendBtn');
+    const convList = $('convList');
+    const editorPanel = $('editorPanel');
+    const editorImage = $('editorImage');
+    const editorPreview = $('editorPreview');
 
-Karakteristik jawabanmu:
-- Terstruktur dan informatif
-- Gunakan format Markdown (bold, list, code block, heading) untuk jawaban panjang
-- Singkat untuk pertanyaan sederhana, detail untuk pertanyaan kompleks
-- Tidak perlu menyebutkan kamu AI kecuali ditanya
-- Jika pengguna mengunggah gambar, analisis gambar tersebut secara detail dan membantu
-- Gunakan bahasa yang hangat tapi profesional`
-};
+    /* ===== Inisialisasi ===== */
+    function init() {
+        // Muat percakapan dari localStorage
+        try {
+            const saved = localStorage.getItem('leo_convs');
+            if (saved) state.conversations = JSON.parse(saved);
+        } catch(e) {}
 
-// ===== DETEKSI USER SCROLL =====
-chatContainer.addEventListener('scroll', () => {
-    const st = chatContainer.scrollTop;
-    const threshold = 120;
-    const atBottom = (chatContainer.scrollHeight - st - chatContainer.clientHeight) < threshold;
-    userScrolledUp = !atBottom;
-    lastScrollTop = st;
-}, { passive: true });
-
-function smartScroll() {
-    if (!userScrolledUp) {
-        chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
-    }
-}
-
-// ===== TEXTAREA =====
-chatInput.addEventListener('input', () => {
-    chatInput.style.height = 'auto';
-    chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
-    toggleSend();
-});
-
-function toggleSend() {
-    const has = chatInput.value.trim().length > 0 || pendingImages.length > 0;
-    if (!isGenerating) btnSend.classList.toggle('active', has);
-}
-
-// ===== FILE UPLOAD =====
-btnUpload.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
-
-function handleFiles(files) {
-    for (const f of files) {
-        if (!f.type.startsWith('image/')) { showToast('Hanya file gambar yang didukung'); continue; }
-        if (f.size > 15 * 1024 * 1024) { showToast('Ukuran maksimal 15MB'); continue; }
-        const reader = new FileReader();
-        reader.onload = ev => {
-            pendingImages.push({ file: f, dataUrl: ev.target.result });
-            renderPreviews();
-            toggleSend();
-        };
-        reader.readAsDataURL(f);
-    }
-}
-
-function renderPreviews() {
-    inputPreview.innerHTML = '';
-    if (!pendingImages.length) { inputPreview.classList.remove('active'); return; }
-    inputPreview.classList.add('active');
-    pendingImages.forEach((img, i) => {
-        const d = document.createElement('div');
-        d.className = 'preview-item';
-        d.innerHTML = `<img src="${img.dataUrl}" alt="Preview"><button class="preview-rm" onclick="rmPreview(${i})" aria-label="Hapus"><i class="fa-solid fa-xmark"></i></button>`;
-        inputPreview.appendChild(d);
-    });
-}
-
-function rmPreview(i) { pendingImages.splice(i, 1); renderPreviews(); toggleSend(); }
-
-// ===== DRAG & DROP =====
-let dragN = 0;
-document.addEventListener('dragenter', e => { e.preventDefault(); dragN++; dragOv.classList.add('active'); });
-document.addEventListener('dragleave', e => { e.preventDefault(); dragN--; if (dragN <= 0) { dragN = 0; dragOv.classList.remove('active'); } });
-document.addEventListener('dragover', e => e.preventDefault());
-document.addEventListener('drop', e => { e.preventDefault(); dragN = 0; dragOv.classList.remove('active'); handleFiles(e.dataTransfer.files); });
-
-// ===== KOMPRESI GAMBAR =====
-function compressImage(dataUrl, maxW = 1024) {
-    return new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-            const c = document.createElement('canvas');
-            let w = img.width, h = img.height;
-            if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
-            if (h > maxW) { w = Math.round(w * maxW / h); h = maxW; }
-            c.width = w; c.height = h;
-            c.getContext('2d').drawImage(img, 0, 0, w, h);
-            resolve(c.toDataURL('image/jpeg', 0.7));
-        };
-        img.src = dataUrl;
-    });
-}
-
-// ===== KIRIM PESAN =====
-chatInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        if (isGenerating) { if (currentController) currentController.abort(); }
-        else sendMessage();
-    }
-});
-btnSend.addEventListener('click', () => {
-    if (isGenerating) { if (currentController) currentController.abort(); }
-    else sendMessage();
-});
-
-function useSug(el) {
-    chatInput.value = el.textContent.trim();
-    chatInput.dispatchEvent(new Event('input'));
-    sendMessage();
-}
-
-async function sendMessage() {
-    if (isGenerating) return;
-    const text = chatInput.value.trim();
-    if (!text && !pendingImages.length) return;
-
-    if (welcomeScreen) welcomeScreen.style.display = 'none';
-    userScrolledUp = false;
-
-    const images = [...pendingImages];
-    pendingImages = [];
-    renderPreviews();
-
-    addMessage('user', text, images);
-    chatInput.value = '';
-    chatInput.style.height = 'auto';
-    toggleSend();
-
-    // Kompres gambar
-    const compressed = [];
-    for (const img of images) {
-        try { compressed.push({ ...img, dataUrl: await compressImage(img.dataUrl) }); }
-        catch { compressed.push(img); }
-    }
-
-    // Bangun konten API
-    let apiContent;
-    if (compressed.length > 0) {
-        const parts = [];
-        if (text) parts.push({ type: 'text', text });
-        for (const img of compressed) parts.push({ type: 'image_url', image_url: { url: img.dataUrl } });
-        apiContent = parts;
-    } else {
-        apiContent = text;
-    }
-
-    // History (tanpa base64 besar)
-    if (compressed.length > 0) {
-        const desc = compressed.map(im => `[Gambar: ${im.file.name}, ${(im.file.size/1024).toFixed(0)}KB]`).join('\n');
-        conversationHistory.push({ role: 'user', content: desc + (text ? '\n' + text : '\nAnalisis gambar ini.') });
-    } else {
-        conversationHistory.push({ role: 'user', content: text });
-    }
-    if (conversationHistory.length > 24) conversationHistory = conversationHistory.slice(-24);
-
-    isGenerating = true;
-    updateBtnStop();
-    showTyping();
-
-    const apiMessages = [SYSTEM_MSG, ...conversationHistory.map(m => ({ role: m.role, content: m.content }))];
-    apiMessages[apiMessages.length - 1] = { role: 'user', content: apiContent };
-
-    await streamAPI(apiMessages);
-}
-
-// ===== STREAMING DENGAN ANIMASI MULUS =====
-async function streamAPI(messages) {
-    const controller = new AbortController();
-    currentController = controller;
-
-    let fullText = '';
-    let targetEl = null;
-    let cursorEl = null;
-    let renderPending = false;
-    let lastRenderedLen = -1;
-
-    // Throttle render — hanya sekali per frame, tapi tetap responsif
-    function scheduleRender() {
-        if (!renderPending) {
-            renderPending = true;
-            requestAnimationFrame(() => {
-                renderPending = false;
-                // Hanya render kalau ada perubahan
-                if (fullText.length !== lastRenderedLen && targetEl) {
-                    lastRenderedLen = fullText.length;
-                    targetEl.innerHTML = renderMD(fullText);
-                    if (cursorEl) targetEl.appendChild(cursorEl);
-                    smartScroll();
-                }
-            });
+        // Sidebar state
+        if (window.innerWidth <= 768) {
+            sidebar.classList.add('collapsed');
+            state.sidebarOpen = false;
         }
-    }
 
-    const timeout = setTimeout(() => { if (!fullText) controller.abort(); }, 30000);
+        // Render percakapan
+        renderConvList();
 
-    try {
-        const res = await fetch('https://text.pollinations.ai/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages, model: 'openai', stream: true }),
-            signal: controller.signal
+        // Input listener
+        msgInput.addEventListener('input', () => {
+            sendBtn.disabled = !msgInput.value.trim();
         });
-        clearTimeout(timeout);
 
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-
-        // Siapkan elemen target + cursor
-        removeTyping();
-        const msgDiv = createMsgDiv('ai');
-        targetEl = msgDiv.querySelector('.msg-content');
-        cursorEl = document.createElement('span');
-        cursorEl.className = 'typing-cursor';
-        chatInner.appendChild(msgDiv);
-        smartScroll();
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        let detectedSSE = false;
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            buffer += chunk;
-
-            if (!detectedSSE && buffer.length > 5) {
-                detectedSSE = buffer.trimStart().startsWith('data:');
-            }
-
-            if (detectedSSE) {
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-                for (const line of lines) {
-                    const t = line.trim();
-                    if (!t || t === 'data: [DONE]') continue;
-                    if (t.startsWith('data: ')) {
-                        try {
-                            const j = JSON.parse(t.slice(6));
-                            const tok = j.choices?.[0]?.delta?.content || '';
-                            if (tok) { fullText += tok; scheduleRender(); }
-                        } catch {}
-                    }
-                }
-            } else {
-                fullText += chunk;
-                scheduleRender();
-            }
+        // Inisialisasi voice recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            state.recognition = new SR();
+            state.recognition.lang = 'id-ID';
+            state.recognition.continuous = false;
+            state.recognition.interimResults = false;
+            state.recognition.onresult = (e) => {
+                const text = e.results[0][0].transcript;
+                msgInput.value = text;
+                sendBtn.disabled = false;
+                autoResize(msgInput);
+                stopVoice();
+            };
+            state.recognition.onerror = stopVoice;
+            state.recognition.onend = stopVoice;
         }
+    }
 
-        // Sisa buffer
-        if (buffer.trim()) {
-            if (detectedSSE && buffer.trim().startsWith('data: ') && buffer.trim() !== 'data: [DONE]') {
-                try { const j = JSON.parse(buffer.trim().slice(6)); fullText += j.choices?.[0]?.delta?.content || ''; } catch {}
-            } else if (!detectedSSE) {
-                fullText += buffer;
-            }
+    /* ===== Sidebar ===== */
+    function toggleSidebar() {
+        state.sidebarOpen = !state.sidebarOpen;
+        sidebar.classList.toggle('collapsed', !state.sidebarOpen);
+        overlay.classList.toggle('active', state.sidebarOpen && window.innerWidth <= 768);
+    }
+
+    /* ===== Percakapan ===== */
+    function newChat() {
+        const conv = {
+            id: Date.now().toString(),
+            title: 'Obrolan Baru',
+            messages: [],
+            createdAt: Date.now()
+        };
+        state.conversations.unshift(conv);
+        state.currentId = conv.id;
+        saveConvs();
+        renderConvList();
+        showWelcome();
+        msgInput.focus();
+        if (window.innerWidth <= 768 && state.sidebarOpen) toggleSidebar();
+    }
+
+    function switchConversation(id) {
+        state.currentId = id;
+        renderConvList();
+        renderMessages();
+        if (window.innerWidth <= 768 && state.sidebarOpen) toggleSidebar();
+    }
+
+    function deleteConversation(id, e) {
+        e.stopPropagation();
+        state.conversations = state.conversations.filter(c => c.id !== id);
+        if (state.currentId === id) {
+            state.currentId = state.conversations.length ? state.conversations[0].id : null;
         }
+        saveConvs();
+        renderConvList();
+        if (state.currentId) renderMessages(); else showWelcome();
+    }
 
-        // Render final + animasi cursor hilang
-        if (targetEl) {
-            targetEl.innerHTML = renderMD(fullText);
-            // Animasi cursor fade out yang mulus
-            const finalCursor = document.createElement('span');
-            finalCursor.className = 'typing-cursor hide';
-            targetEl.appendChild(finalCursor);
-            setTimeout(() => finalCursor.remove(), 350);
-        }
-        conversationHistory.push({ role: 'assistant', content: fullText });
+    function getCurrentConv() {
+        return state.conversations.find(c => c.id === state.currentId);
+    }
 
-    } catch (err) {
-        clearTimeout(timeout);
+    function renderConvList() {
+        convList.innerHTML = state.conversations.map(c => `
+            <div class="conv-item ${c.id === state.currentId ? 'active' : ''}" onclick="switchConversation('${c.id}')">
+                <i class="fas fa-message" style="font-size:13px;color:var(--text-muted);"></i>
+                <span class="conv-title">${escapeHTML(c.title)}</span>
+                <button class="conv-delete" onclick="deleteConversation('${c.id}', event)" aria-label="Hapus"><i class="fas fa-trash"></i></button>
+            </div>
+        `).join('');
+    }
 
-        if (err.name === 'AbortError') {
-            removeTyping();
-            if (fullText) {
-                if (!targetEl) {
-                    const msgDiv = createMsgDiv('ai');
-                    targetEl = msgDiv.querySelector('.msg-content');
-                    chatInner.appendChild(msgDiv);
-                }
-                targetEl.innerHTML = renderMD(fullText);
-                const fc = document.createElement('span');
-                fc.className = 'typing-cursor hide';
-                targetEl.appendChild(fc);
-                setTimeout(() => fc.remove(), 350);
-                conversationHistory.push({ role: 'assistant', content: fullText });
-            } else {
-                const msgDiv = createMsgDiv('ai');
-                msgDiv.querySelector('.msg-content').innerHTML = '<p><em>Dihentikan.</em></p>';
-                chatInner.appendChild(msgDiv);
-            }
+    function saveConvs() {
+        try { localStorage.setItem('leo_convs', JSON.stringify(state.conversations)); } catch(e) {}
+    }
+
+    /* ===== Tampilan Welcome / Messages ===== */
+    function showWelcome() {
+        welcomeScreen.style.display = 'flex';
+        msgContainer.style.display = 'none';
+    }
+
+    function showMessages() {
+        welcomeScreen.style.display = 'none';
+        msgContainer.style.display = 'block';
+    }
+
+    function renderMessages() {
+        const conv = getCurrentConv();
+        if (!conv || !conv.messages.length) { showWelcome(); return; }
+        showMessages();
+        msgContainer.innerHTML = conv.messages.map(m => buildMessageHTML(m)).join('');
+        scrollToBottom();
+    }
+
+    function buildMessageHTML(m) {
+        const isUser = m.role === 'user';
+        let contentHTML = '';
+
+        if (m.type === 'photo' && m.imageUrl) {
+            contentHTML = `<div class="msg-content">${formatText(m.content)}</div>
+                <div class="msg-image" onclick="openImageInEditor('${m.imageUrl}')">
+                    <img src="${m.imageUrl}" alt="Gambar yang dihasilkan" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding:20px;color:var(--text-muted);text-align:center;\\'>Gagal memuat gambar</div>'">
+                    <div class="img-overlay">
+                        <button onclick="event.stopPropagation();openImageInEditor('${m.imageUrl}')"><i class="fas fa-pen"></i> Edit</button>
+                        <button onclick="event.stopPropagation();downloadDirect('${m.imageUrl}')"><i class="fas fa-download"></i> Unduh</button>
+                    </div>
+                </div>`;
+        } else if (m.type === 'code' && m.code) {
+            contentHTML = `<div class="msg-content">${formatText(m.content)}</div>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">${m.language || 'code'}</span>
+                        <button class="code-copy" onclick="copyCode(this, \`${btoa(unescape(encodeURIComponent(m.code)))}\`)"><i class="fas fa-copy"></i> Salin</button>
+                    </div>
+                    <pre><code class="block-code">${escapeHTML(m.code)}</code></pre>
+                </div>`;
+        } else if (m.type === 'editor') {
+            contentHTML = `<div class="msg-content">${formatText(m.content)}</div>
+                <div style="margin-top:10px;">
+                    <button onclick="toggleEditor()" style="padding:10px 20px;border-radius:10px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);cursor:pointer;font-size:13px;font-family:'DM Sans';transition:all 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='#000'" onmouseout="this.style.background='var(--accent-dim)';this.style.color='var(--accent)'">
+                        <i class="fas fa-wand-magic-sparkles"></i> Buka Editor Foto
+                    </button>
+                </div>`;
         } else {
-            removeTyping();
-            try {
-                const fb = await fetch('https://text.pollinations.ai/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages, model: 'openai' })
-                });
-                const txt = await fb.text();
-                const msgDiv = createMsgDiv('ai');
-                targetEl = msgDiv.querySelector('.msg-content');
-                chatInner.appendChild(msgDiv);
-                // Animasi ketik ulang untuk fallback
-                await smoothTypeIn(targetEl, txt);
-                fullText = txt;
-                conversationHistory.push({ role: 'assistant', content: txt });
-            } catch {
-                const lastMsg = messages[messages.length - 1];
-                const userText = typeof lastMsg.content === 'string' ? lastMsg.content : 'Pesan dengan gambar';
-                const localResp = localFallback(userText);
-                const msgDiv = createMsgDiv('ai');
-                targetEl = msgDiv.querySelector('.msg-content');
-                chatInner.appendChild(msgDiv);
-                await smoothTypeIn(targetEl, localResp);
-                showToast('Mode offline — respons lokal');
-            }
+            contentHTML = `<div class="msg-content">${formatText(m.content)}</div>`;
         }
-    } finally {
-        isGenerating = false;
-        currentController = null;
-        updateBtnSend();
-        smartScroll();
-    }
-}
 
-// ===== ANIMASI KETIK MULUS UNTUK FALLBACK =====
-function smoothTypeIn(el, html) {
-    return new Promise(resolve => {
+        return `<div class="message-row">
+            <div class="message-inner">
+                <div class="msg-avatar ${isUser ? 'user-avatar' : 'ai-avatar'}">${isUser ? '<i class="fas fa-user" style="font-size:14px;"></i>' : 'L'}</div>
+                <div class="msg-body">
+                    <div class="msg-name">${isUser ? 'Anda' : 'LEO AI'}</div>
+                    ${contentHTML}
+                </div>
+            </div>
+        </div>`;
+    }
+
+    /* ===== Kirim Pesan ===== */
+    function sendMessage() {
+        const text = msgInput.value.trim();
+        if (!text || state.isTyping) return;
+
+        // Buat percakapan baru jika belum ada
+        if (!state.currentId) newChat();
+        const conv = getCurrentConv();
+        if (!conv) return;
+
+        // Tambah pesan user
+        conv.messages.push({ role: 'user', content: text, type: 'text' });
+        // Update judul dari pesan pertama
+        if (conv.messages.length === 1) {
+            conv.title = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+            renderConvList();
+        }
+
+        msgInput.value = '';
+        sendBtn.disabled = true;
+        autoResize(msgInput);
+        showMessages();
+        msgContainer.innerHTML += buildMessageHTML({ role: 'user', content: text, type: 'text' });
+        scrollToBottom();
+        saveConvs();
+
+        // Tampilkan thinking indicator
+        state.isTyping = true;
+        const thinkingId = 'thinking-' + Date.now();
+        msgContainer.innerHTML += `<div class="message-row" id="${thinkingId}">
+            <div class="message-inner">
+                <div class="msg-avatar ai-avatar">L</div>
+                <div class="msg-body">
+                    <div class="msg-name">LEO AI</div>
+                    <div class="thinking-dots"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+        </div>`;
+        scrollToBottom();
+
+        // Simulasi delay berpikir
+        const delay = 800 + Math.random() * 1200;
+        setTimeout(() => {
+            const thinkingEl = document.getElementById(thinkingId);
+            if (thinkingEl) thinkingEl.remove();
+
+            const response = generateAIResponse(text);
+            conv.messages.push(response);
+            saveConvs();
+
+            // Tampilkan respons dengan efek ketik
+            typewriterResponse(response);
+        }, delay);
+    }
+
+    function typewriterResponse(msg) {
+        const row = document.createElement('div');
+        row.className = 'message-row';
+        row.innerHTML = `<div class="message-inner">
+            <div class="msg-avatar ai-avatar">L</div>
+            <div class="msg-body">
+                <div class="msg-name">LEO AI</div>
+                <div class="msg-typing-target"></div>
+            </div>
+        </div>`;
+        msgContainer.appendChild(row);
+        scrollToBottom();
+
+        const target = row.querySelector('.msg-typing-target');
+        const words = msg.content.split(' ');
+        let html = '';
         let i = 0;
-        const speed = 6;
-        let buf = '';
-        const cursor = document.createElement('span');
-        cursor.className = 'typing-cursor';
 
-        function step() {
-            if (i < html.length) {
-                buf += html[i];
+        // Ketik per kata
+        const typeInterval = setInterval(() => {
+            if (i < words.length) {
+                html += (i > 0 ? ' ' : '') + escapeHTML(words[i]);
+                target.innerHTML = formatText(html);
                 i++;
-                // Jangan potong di tengah tag
-                if (buf.lastIndexOf('<') > buf.lastIndexOf('>')) {
-                    while (i < html.length && buf.lastIndexOf('<') > buf.lastIndexOf('>')) {
-                        buf += html[i]; i++;
-                    }
-                }
-                el.innerHTML = buf;
-                el.appendChild(cursor);
-                smartScroll();
-                setTimeout(step, speed);
+                scrollToBottom();
             } else {
-                el.innerHTML = html;
-                cursor.className = 'typing-cursor hide';
-                el.appendChild(cursor);
-                setTimeout(() => cursor.remove(), 350);
-                resolve();
+                clearInterval(typeInterval);
+                // Tambah elemen tambahan (gambar, kode, dll)
+                let extra = '';
+                if (msg.type === 'photo' && msg.imageUrl) {
+                    extra = `<div class="msg-image" onclick="openImageInEditor('${msg.imageUrl}')">
+                        <img src="${msg.imageUrl}" alt="Gambar" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding:20px;color:var(--text-muted);text-align:center;\\'>Gagal memuat gambar</div>'">
+                        <div class="img-overlay">
+                            <button onclick="event.stopPropagation();openImageInEditor('${msg.imageUrl}')"><i class="fas fa-pen"></i> Edit</button>
+                            <button onclick="event.stopPropagation();downloadDirect('${msg.imageUrl}')"><i class="fas fa-download"></i> Unduh</button>
+                        </div>
+                    </div>`;
+                } else if (msg.type === 'code' && msg.code) {
+                    const b64 = btoa(unescape(encodeURIComponent(msg.code)));
+                    extra = `<div class="code-block">
+                        <div class="code-header">
+                            <span class="code-lang">${msg.language || 'code'}</span>
+                            <button class="code-copy" onclick="copyCode(this, '${b64}')"><i class="fas fa-copy"></i> Salin</button>
+                        </div>
+                        <pre><code class="block-code">${escapeHTML(msg.code)}</code></pre>
+                    </div>`;
+                } else if (msg.type === 'editor') {
+                    extra = `<div style="margin-top:10px;">
+                        <button onclick="toggleEditor()" style="padding:10px 20px;border-radius:10px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);cursor:pointer;font-size:13px;font-family:'DM Sans';">
+                            <i class="fas fa-wand-magic-sparkles"></i> Buka Editor Foto
+                        </button>
+                    </div>`;
+                }
+                target.innerHTML = formatText(msg.content) + extra;
+                state.isTyping = false;
+                scrollToBottom();
             }
-        }
-        step();
-    });
-}
-
-// ===== FALLBACK LOKAL =====
-function localFallback(text) {
-    const q = text.toLowerCase();
-    if (q.includes('halo') || q.includes('hai') || q.includes('hello'))
-        return '<p>Halo! Saat ini saya berjalan dalam mode offline. Pastikan koneksi internet aktif dan coba lagi ya!</p>';
-    if (q.includes('gambar'))
-        return '<p>Saya melihat Anda mengunggah gambar. Untuk analisis gambar yang mendalam, saya memerlukan koneksi internet. Coba lagi nanti.</p>';
-    return '<p>Maaf, tidak dapat terhubung ke server AI saat ini. Pastikan koneksi internet aktif dan coba kirim pesan lagi.</p>';
-}
-
-// ===== MARKDOWN RENDERER =====
-function renderMD(raw) {
-    if (!raw) return '';
-    let text = raw;
-
-    // Ekstrak code blocks
-    const blocks = [];
-    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-        blocks.push('<pre><code>' + escHtml(code.trim()) + '</code></pre>');
-        return '\x00B' + (blocks.length - 1) + '\x00';
-    });
-
-    // Handle code block belum ditutup saat streaming
-    const unclosed = (text.match(/```/g) || []).length;
-    if (unclosed % 2 !== 0) {
-        const idx = text.lastIndexOf('```');
-        const after = text.substring(idx + 3);
-        text = text.substring(0, idx) + '\x00B' + blocks.length + '\x00';
-        blocks.push('<pre><code>' + escHtml(after) + '</code></pre>');
+        }, 30);
     }
 
-    text = escHtml(text);
+    /* ===== Generator Respons AI ===== */
+    function generateAIResponse(userMsg) {
+        const msg = userMsg.toLowerCase();
 
-    // Inline code
-    text = text.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+        // Sapaan
+        if (/^(hai|halo|hello|hi|hey|selamat|assalam|apa kabar)/.test(msg)) {
+            return { role:'ai', type:'text', content: 'Halo! Senang bertemu dengan Anda. Saya LEO AI, asisten kecerdasan buatan yang siap membantu berbagai kebutuhan Anda — mulai dari menjawab pertanyaan, menulis kode, menghasilkan gambar, hingga mengedit foto. Ada yang bisa saya bantu?' };
+        }
 
-    // Bold
-    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // Siapa kamu
+        if (/siapa (kamu|anda|leo)|tentang.*leo|apa itu leo/.test(msg)) {
+            return { role:'ai', type:'text', content: 'Saya **LEO AI**, asisten kecerdasan buatan yang dirancang untuk menjadi pendamping serba bisa Anda. Berikut kemampuan utama saya:\n\n1. **Tanya Jawab** — Saya bisa menjawab pertanyaan tentang berbagai topik.\n2. **Pembuatan Kode** — Saya bisa menulis kode dalam berbagai bahasa pemrograman.\n3. **Generasi Gambar** — Katakan apa gambar yang Anda inginkan, saya akan membuatnya.\n4. **Edit Foto** — Saya menyediakan editor foto lengkap dengan berbagai filter dan efek.\n5. **Perhitungan Matematika** — Tulis ekspresi matematika dan saya akan menghitungnya.\n6. **Penulisan Kreatif** — Cerita, puisi, esai, dan lainnya.\n\nSilakan coba kirimkan permintaan apa saja!' };
+        }
 
-    // Italic
-    text = text.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+        // Generasi foto
+        if (/buat.*(foto|gambar|image)|generate.*(foto|gambar)|gambar.*pemandangan|foto.*kucing|foto.*anime|foto.*makanan|foto.*kota|foto.*alam|foto.*sunset|foto.*laut|foto.*gunung|draw|paint|ilustrasi/.test(msg)) {
+            const seed = Math.floor(Math.random() * 9999);
+            return {
+                role:'ai', type:'photo',
+                content: `Baik, saya telah membuatkan gambar berdasarkan permintaan Anda: "${userMsg}"\n\nGambar ini dihasilkan dalam resolusi tinggi. Anda bisa mengklik gambar untuk membukanya langsung di **Editor Foto** jika ingin menambahkan efek atau melakukan penyesuaian.`,
+                imageUrl: `https://picsum.photos/seed/${seed}/800/600`
+            };
+        }
 
-    // Headers
-    text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-    text = text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+        // Multi gambar
+        if (/beberapa.*foto|3.*gambar|empat.*foto|banyak.*gambar|koleksi.*foto/.test(msg)) {
+            const seed1 = Math.floor(Math.random() * 9999);
+            const seed2 = seed1 + 111;
+            const seed3 = seed1 + 222;
+            return {
+                role:'ai', type:'photo',
+                content: `Tentu! Berikut beberapa gambar yang saya buat untuk Anda. Klik salah satu untuk mengeditnya di Editor Foto.`,
+                imageUrl: `https://picsum.photos/seed/${seed1}/800/600`
+            };
+        }
 
-    // Unordered list
-    text = text.replace(/^[\-\*] (.+)$/gm, '\x01LI\x01$1\x01/LI\x01');
-    text = text.replace(/(\x01LI\x01.*?\x01\/LI\x01(\n|$)?)+/g, m => {
-        return '<ul>' + m.replace(/\x01LI\x01(.*?)\x01\/LI\x01/g, '<li>$1</li>') + '</ul>';
-    });
+        // Edit foto
+        if (/edit.*(foto|gambar)|ubah.*(foto|gambar)|filter.*foto|efek.*foto|retouch|coloring/.test(msg)) {
+            return {
+                role:'ai', type:'editor',
+                content: 'Saya akan membuka **Editor Foto** untuk Anda. Di panel editor sebelah kanan, Anda bisa:\n\n• **Mengunggah foto** dari perangkat Anda\n• Mengatur **kecerahan, kontras, saturasi, blur**, dan **hue**\n• Menerapkan filter **grayscale, sepia, invert**\n• **Memutar** dan **membalik** gambar\n• **Mengunduh** hasil edit dalam kualitas penuh\n\nSilakan klik tombol di bawah atau gunakan ikon editor di header untuk membukanya.'
+            };
+        }
 
-    // Ordered list
-    text = text.replace(/^\d+\. (.+)$/gm, '\x01OLI\x01$1\x01/OLI\x01');
-    text = text.replace(/(\x01OLI\x01.*?\x01\/OLI\x01(\n|$)?)+/g, m => {
-        return '<ol>' + m.replace(/\x01OLI\x01(.*?)\x01\/OLI\x01/g, '<li>$1</li>') + '</ol>';
-    });
+        // Kode/programming
+        if (/buat.*(kode|code|program|script|fungsi|function|website|aplikasi|web)|tuliskan.*(kode|code)|coding|program|javascript|python|html|css|react|vue|node/.test(msg)) {
+            const codes = [
+                {
+                    language: 'javascript',
+                    code: `// Animasi partikel dengan Canvas API\nconst canvas = document.getElementById('canvas');\nconst ctx = canvas.getContext('2d');\ncanvas.width = window.innerWidth;\ncanvas.height = window.innerHeight;\n\nconst particles = [];\nclass Particle {\n  constructor() {\n    this.x = Math.random() * canvas.width;\n    this.y = Math.random() * canvas.height;\n    this.size = Math.random() * 3 + 1;\n    this.speedX = (Math.random() - 0.5) * 2;\n    this.speedY = (Math.random() - 0.5) * 2;\n    this.color = \`hsl(\${Math.random()*60 + 20}, 100%, 60%)\`;\n  }\n  update() {\n    this.x += this.speedX;\n    this.y += this.speedY;\n    if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;\n    if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;\n  }\n  draw() {\n    ctx.beginPath();\n    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);\n    ctx.fillStyle = this.color;\n    ctx.fill();\n  }\n}\n\nfor (let i = 0; i < 150; i++) particles.push(new Particle());\n\nfunction animate() {\n  ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';\n  ctx.fillRect(0, 0, canvas.width, canvas.height);\n  particles.forEach(p => { p.update(); p.draw(); });\n  requestAnimationFrame(animate);\n}\nanimate();`,
+                    content: 'Berikut adalah kode animasi partikel menggunakan **Canvas API** JavaScript. Kode ini membuat 150 partikel berwarna emas yang bergerak dan memantul di layar dengan efek jejak:'
+                },
+                {
+                    language: 'python',
+                    code: `# Generator Password Aman\nimport random\nimport string\n\ndef generate_password(length=16, use_upper=True, use_digits=True, use_symbols=True):\n    """Menghasilkan password acak yang aman."""\n    chars = string.ascii_lowercase\n    if use_upper:\n        chars += string.ascii_uppercase\n    if use_digits:\n        chars += string.digits\n    if use_symbols:\n        chars += string.punctuation\n    \n    if not chars:\n        raise ValueError("Minimal satu tipe karakter harus dipilih")\n    \n    password = ''.join(random.choice(chars) for _ in range(length))\n    \n    # Pastikan mengandung setiap tipe yang dipilih\n    checks = []\n    if use_upper: checks.append(string.ascii_uppercase)\n    if use_digits: checks.append(string.digits)\n    if use_symbols: checks.append(string.punctuation)\n    \n    for check_set in checks:\n        if not any(c in check_set for c in password):\n            idx = random.randint(0, length - 1)\n            password = password[:idx] + random.choice(check_set) + password[idx+1:]\n    \n    return password\n\n# Contoh penggunaan\nprint(f"Password 16 karakter: {generate_password()}")\nprint(f"Password sederhana: {generate_password(12, False, False, False)}")\nprint(f"Password super aman: {generate_password(24)}")`,
+                    content: 'Berikut adalah kode **Python** untuk generator password yang aman. Fungsi ini memungkinkan kustomisasi panjang dan tipe karakter:'
+                }
+            ];
+            const chosen = codes[Math.floor(Math.random() * codes.length)];
+            return { role:'ai', type:'code', content: chosen.content, code: chosen.code, language: chosen.language };
+        }
 
-    // Paragraf
-    text = text.replace(/\n{2,}/g, '</p><p>');
-    text = text.replace(/\n/g, '<br>');
+        // Matematika
+        if (/hitung|kali|bagi|tambah|kurang|(\d+\s*[\+\-\*\/\%\^]\s*\d+)/.test(msg)) {
+            const match = msg.match(/(\d+[\.\d]*\s*[\+\-\*\/\%\^]\s*\d+[\.\d]*)/);
+            if (match) {
+                try {
+                    const expr = match[1].replace(/\^/g, '**');
+                    const result = Function('"use strict"; return (' + expr + ')')();
+                    return { role:'ai', type:'text', content: `Hasil perhitungan:\n\n**${match[1].trim()} = ${result}**\n\nPerhitungan selesai. Ada yang lain yang ingin dihitung?` };
+                } catch(e) {}
+            }
+            return { role:'ai', type:'text', content: 'Tolong tuliskan ekspresi matematika yang jelas, misalnya: `25 * 43`, `100 + 250`, atau `144 / 12`.' };
+        }
 
-    // Restore code blocks
-    blocks.forEach((b, i) => { text = text.replace('\x00B' + i + '\x00', b); });
+        // Cerita/kreatif
+        if (/cerita|dongeng|puisi|novel|fiksi|kreatif|tulis.*cerita/.test(msg)) {
+            return { role:'ai', type:'text', content: '**Langit Jingga di Ujung Senja**\n\nMatahari perlahan tenggelam di balik deretan gedung pencakar langit Kota Metara. Cahaya jingga memantul dari kaca-kaca gedung, menciptakan ilusi seolah kota itu terbakar dari dalam.\n\nRina duduk di tepi jembatan penyeberangan, kakinya mengayun bebas di atas sungai yang memantulkan cahaya senja. Di tangannya, sebuah buku catatan usang — warisan neneknya.\n\n"Nenek selalu bilang," bisiknya pada angin, "setiap senja adalah janji bahwa esok akan datang."\n\nDi saku jaketnya, telepon bergetar. Sebuah pesan dari nomor tidak dikenal:\n\n*"Buku itu bukan milik nenekmu. Dan senja ini bukan biasa."*\n\nRina menatap layar, lalu melihat ke arah matahari yang kini tinggal separuh di atas cakrawala. Untuk pertama kalinya, ia merasakan bahwa senja ini memang berbeda.\n\n---\n\n*Inilah pembukaan cerita pendek yang saya buat. Apakah Anda ingin saya melanjutkan ceritanya, atau mengubah genre dan tema?' };
+        }
 
-    return '<p>' + text + '</p>';
-}
+        // Penjelasan AI
+        if (/kecerdasan buatan|artificial intelligence|apa itu ai|machine learning|deep learning|neural network/.test(msg)) {
+            return { role:'ai', type:'text', content: '**Kecerdasan Buatan (AI)** adalah cabang ilmu komputer yang bertujuan membuat sistem yang mampu melakukan tugas-tugas yang biasanya membutuhkan kecerdasan manusia.\n\n**Bagaimana AI Bekerja:**\n\n1. **Pengumpulan Data** — AI membutuhkan data dalam jumlah besar untuk belajar. Semakin beragam dan berkualitas data, semakin baik hasilnya.\n\n2. **Pelatihan Model** — Menggunakan algoritma *machine learning*, sistem mengidentifikasi pola dari data. Misalnya, dengan melihat jutaan foto kucing, AI belajar mengenali ciri-ciri kucing.\n\n3. **Neural Network** — Terinspirasi dari struktur otak manusia, jaringan saraf tiruan terdiri dari lapisan-lapisan "neuron" yang memproses informasi secara hierarkis.\n\n4. **Deep Learning** — Subset dari machine learning yang menggunakan neural network dengan banyak lapisan, mampu menangani tugas kompleks seperti pengenalan wajah, penerjemahan bahasa, dan生成 gambar.\n\n**Jenis AI:**\n- **Narrow AI** — Spesifik pada satu tugas (seperti ChatGPT, pengenalan suara)\n- **General AI** — Teoritis, mampu melakukan tugas intelektual apa pun seperti manusia\n- **Super AI** — Masih hipotetis, melampaui kecerdasan manusia\n\nIngin saya menjelaskan aspek tertentu lebih mendalam?' };
+        }
 
-function escHtml(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+        // Terima kasih
+        if (/terima kasih|thanks|makasih|thx|trims/.test(msg)) {
+            return { role:'ai', type:'text', content: 'Sama-sama! Senang bisa membantu Anda. Jangan ragu untuk bertanya lagi kapan saja — baik itu tentang kode, gambar, edit foto, atau topik apa pun. Saya selalu siap di sini!' };
+        }
 
-// ===== UI HELPERS =====
-function addMessage(role, text, images = []) {
-    const div = createMsgDiv(role);
-    const content = div.querySelector('.msg-content');
-    if (images.length) images.forEach(img => { content.innerHTML += `<img class="msg-img" src="${img.dataUrl}" alt="Gambar">`; });
-    if (text) content.innerHTML += '<p>' + escHtml(text) + '</p>';
-    chatInner.appendChild(div);
-    smartScroll();
-}
+        // Respons default bervariasi
+        const defaults = [
+            `Pertanyaan yang menarik tentang "${userMsg.substring(0, 60)}". Izinkan saya berbagi beberapa perspektif:\n\n**Poin Utama:**\nTopik ini memiliki beberapa dimensi yang perlu dipahami secara komprehensif. Dari sudut pandang teoretis, ada prinsip-prinsip dasar yang menjadi fondasinya.\n\n**Penerapan Praktis:**\nDalam dunia nyata, konsep ini diterapkan dalam berbagai konteks — dari skala individu hingga organisasi besar. Pemahaman yang baik tentang dasar-dasarnya akan sangat membantu dalam implementasi.\n\n**Perkembangan Terkini:**\nBidang ini terus berkembang pesat, terutama dengan kemajuan teknologi digital. Ada banyak sumber daya yang tersedia jika Anda ingin mendalami lebih lanjut.\n\nApakah ada aspek spesifik yang ingin saya jelaskan lebih detail? Saya juga bisa membantu membuat kode, menghasilkan gambar, atau mengedit foto jika Anda tertarik.`,
+            `Saya memahami pertanyaan Anda mengenai "${userMsg.substring(0, 60)}". Berikut analisis singkat saya:\n\n1. **Konteks** — Setiap topik perlu dilihat dalam konteks yang tepat agar pemahaman kita tidak terdistorsi.\n\n2. **Kompleksitas** — Meskipun tampak sederhana di permukaan, seringkali ada lapisan-lapisan pemahaman yang lebih dalam.\n\n3. **Relevansi** — Memahami mengapa sesuatu penting sama krusialnya dengan memahami apa itu sendiri.\n\nSaya bisa membantu Anda lebih spesifik. Coba sebutkan:\n- Apakah Anda ingin penjelasan **teknis** atau **umum**?\n- Apakah ada **contoh spesifik** yang ingin dibahas?\n- Atau Anda ingin saya **membuat sesuatu** terkait topik ini?`
+        ];
+        return { role:'ai', type:'text', content: defaults[Math.floor(Math.random() * defaults.length)] };
+    }
 
-function createMsgDiv(role) {
-    const div = document.createElement('div');
-    div.className = 'message';
-    const isUser = role === 'user';
-    div.innerHTML = `
-        <div class="msg-av ${isUser ? 'u' : 'a'}">${isUser ? 'K' : 'L'}</div>
-        <div class="msg-body">
-            <div class="msg-name">${isUser ? 'Kamu' : 'LEO AI'}</div>
-            <div class="msg-content"></div>
-        </div>`;
-    return div;
-}
+    /* ===== Format Teks ===== */
+    function formatText(text) {
+        // Bold: **text**
+        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // Italic: *text*
+        text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        // Inline code: `text`
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        // Line breaks
+        text = text.replace(/\n/g, '<br>');
+        return text;
+    }
 
-function showTyping() {
-    const div = document.createElement('div');
-    div.className = 'message';
-    div.id = 'typingMsg';
-    div.innerHTML = `
-        <div class="msg-av a">L</div>
-        <div class="msg-body">
-            <div class="msg-name">LEO AI</div>
-            <div class="msg-content"><div class="typing-dots"><span></span><span></span><span></span></div></div>
-        </div>`;
-    chatInner.appendChild(div);
-    smartScroll();
-}
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
 
-function removeTyping() { const el = document.getElementById('typingMsg'); if (el) el.remove(); }
+    /* ===== Utilitas ===== */
+    function scrollToBottom() {
+        requestAnimationFrame(() => {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        });
+    }
 
-function updateBtnStop() {
-    btnSend.innerHTML = '<i class="fa-solid fa-stop"></i>';
-    btnSend.classList.add('active', 'stop');
-}
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 150) + 'px';
+    }
 
-function updateBtnSend() {
-    btnSend.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
-    btnSend.classList.remove('stop');
-    toggleSend();
-}
+    function handleInputKey(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    }
 
-function showToast(msg) {
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    setTimeout(() => toastEl.classList.remove('show'), 2500);
-}
-</script>
+    function useSuggestion(text) {
+        msgInput.value = text;
+        sendBtn.disabled = false;
+        autoResize(msgInput);
+        sendMessage();
+    }
 
+    /* ===== Salin Kode ===== */
+    function copyCode(btn, b64) {
+        try {
+            const code = decodeURIComponent(escape(atob(b64)));
+            navigator.clipboard.writeText(code).then(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i> Tersalin';
+                setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Salin'; }, 2000);
+            });
+        } catch(e) {
+            showToast('Gagal menyalin kode', 'error');
+        }
+    }
+
+    /* ===== Download Langsung ===== */
+    function downloadDirect(url) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.download = 'leo-ai-image.jpg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('Mengunduh gambar...', 'success');
+    }
+
+    /* ===== Voice Input ===== */
+    function toggleVoice() {
+        if (!state.recognition) {
+            showToast('Browser Anda tidak mendukung input suara', 'error');
+            return;
+        }
+        if (state.voiceActive) {
+            state.recognition.stop();
+            stopVoice();
+        } else {
+            state.recognition.start();
+            state.voiceActive = true;
+            $('voiceBtn').classList.add('voice-active');
+            showToast('Mendengarkan... Silakan bicara', 'success');
+        }
+    }
+
+    function stopVoice() {
+        state.voiceActive = false;
+        $('voiceBtn').classList.remove('voice-active');
+    }
+
+    /* ===== Upload File ke Chat ===== */
+    function handleFileUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            openImageInEditor(ev.target.result);
+            showToast('Foto dimuat di Editor', 'success');
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    }
+
+    /* ===== Photo Editor ===== */
+    function toggleEditor() {
+        state.editorOpen = !state.editorOpen;
+        editorPanel.classList.toggle('open', state.editorOpen);
+    }
+
+    function openImageInEditor(src) {
+        editorImage.src = src;
+        editorImage.style.display = 'block';
+        const placeholder = editorPreview.querySelector('.upload-placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+        resetFilters();
+        if (!state.editorOpen) toggleEditor();
+        showToast('Gambar dimuat di Editor Foto', 'success');
+    }
+
+    function loadEditorImage(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            editorImage.src = ev.target.result;
+            editorImage.style.display = 'block';
+            const placeholder = editorPreview.querySelector('.upload-placeholder');
+            if (placeholder) placeholder.style.display = 'none';
+            resetFilters();
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    }
+
+    function updateFilters() {
+        const b = $('filterBrightness').value;
+        const c = $('filterContrast').value;
+        const s = $('filterSaturate').value;
+        const bl = $('filterBlur').value;
+        const h = $('filterHue').value;
+
+        $('brightnessVal').textContent = b + '%';
+        $('contrastVal').textContent = c + '%';
+        $('saturateVal').textContent = s + '%';
+        $('blurVal').textContent = bl + 'px';
+        $('hueVal').textContent = h + '°';
+
+        const t = state.editorToggles;
+        const filterStr = `brightness(${b}%) contrast(${c}%) saturate(${s}%) blur(${bl}px) hue-rotate(${h}deg)${t.grayscale ? ' grayscale(100%)' : ''}${t.sepia ? ' sepia(100%)' : ''}${t.invert ? ' invert(100%)' : ''}`;
+
+        editorImage.style.filter = filterStr;
+        editorImage.style.transform = `rotate(${state.editorRotation}deg) scaleX(${state.editorFlipH ? -1 : 1})`;
+    }
+
+    function toggleFilter(btn) {
+        const key = btn.dataset.filter;
+        state.editorToggles[key] = !state.editorToggles[key];
+        btn.classList.toggle('active', state.editorToggles[key]);
+        updateFilters();
+    }
+
+    function rotateImage() {
+        state.editorRotation = (state.editorRotation + 90) % 360;
+        updateFilters();
+    }
+
+    function flipImage() {
+        state.editorFlipH = !state.editorFlipH;
+        updateFilters();
+    }
+
+    function resetFilters() {
+        $('filterBrightness').value = 100;
+        $('filterContrast').value = 100;
+        $('filterSaturate').value = 100;
+        $('filterBlur').value = 0;
+        $('filterHue').value = 0;
+        state.editorRotation = 0;
+        state.editorFlipH = false;
+        state.editorToggles = { grayscale: false, sepia: false, invert: false };
+        document.querySelectorAll('.filter-toggle').forEach(b => b.classList.remove('active'));
+        updateFilters();
+    }
+
+    function downloadImage() {
+        if (!editorImage.src || editorImage.style.display === 'none') {
+            showToast('Tidak ada gambar untuk diunduh', 'error');
+            return;
+        }
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Tentukan ukuran canvas berdasarkan rotasi
+            const isRotated = state.editorRotation % 180 !== 0;
+            canvas.width = isRotated ? img.naturalHeight : img.naturalWidth;
+            canvas.height = isRotated ? img.naturalWidth : img.naturalHeight;
+
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(state.editorRotation * Math.PI / 180);
+            if (state.editorFlipH) ctx.scale(-1, 1);
+
+            // Terapkan filter CSS ke canvas
+            const b = $('filterBrightness').value;
+            const c = $('filterContrast').value;
+            const s = $('filterSaturate').value;
+            const bl = $('filterBlur').value;
+            const h = $('filterHue').value;
+            const t = state.editorToggles;
+            let filterStr = `brightness(${b}%) contrast(${c}%) saturate(${s}%) blur(${bl}px) hue-rotate(${h}deg)`;
+            if (t.grayscale) filterStr += ' grayscale(100%)';
+            if (t.sepia) filterStr += ' sepia(100%)';
+            if (t.invert) filterStr += ' invert(100%)';
+            ctx.filter = filterStr;
+
+            ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+            ctx.restore();
+
+            try {
+                const link = document.createElement('a');
+                link.download = 'leo-ai-edited.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('Gambar berhasil diunduh!', 'success');
+            } catch(e) {
+                showToast('Gagal mengunduh. Coba gambar lain.', 'error');
+            }
+        };
+        img.onerror = () => {
+            showToast('Gagal memproses gambar. Mungkin masalah CORS.', 'error');
+        };
+        img.src = editorImage.src;
+    }
+
+    /* ===== Toast ===== */
+    function showToast(message, type = 'success') {
+        const container = $('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(40px)';
+            toast.style.transition = 'all 0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    /* ===== Mulai ===== */
+    init();
+    </script>
 </body>
 </html>
